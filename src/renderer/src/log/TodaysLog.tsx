@@ -43,6 +43,10 @@ export function TodaysLog(): React.JSX.Element {
     void load()
   }, [load])
 
+  // Refetch the viewed day whenever the main process reports a change (a
+  // start/pause/resume/end transition, or an edit from another path).
+  useEffect(() => window.api.onBlocksChanged(() => void load()), [load])
+
   // Tick so the active block's live duration advances.
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000)

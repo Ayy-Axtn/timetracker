@@ -4,6 +4,7 @@ import { getTaskById } from '../db/tasks'
 import { getSettings } from '../settings'
 import { notify } from '../notifications'
 import { formatTrayTooltip, setTrayState, setTrayTooltip, updateTrayMenu } from '../tray'
+import { notifyBlocksChanged } from '../windows'
 import { createStateMachine } from './machine'
 import { popupPrompter } from '../popup/prompter'
 import { clearHeartbeat, readHeartbeat, startHeartbeat, stopHeartbeat, writeHeartbeat } from './heartbeat'
@@ -53,6 +54,7 @@ const syncState = (): void => {
   setTrayState(hasActive ? 'active' : hasPaused ? 'paused' : 'idle')
   updateTrayMenu({ hasActive, hasPaused })
   refreshTooltip()
+  notifyBlocksChanged() // keep an open Today's Log window live
 }
 
 const dispatch = (action: TriggerAction): Promise<void> => {

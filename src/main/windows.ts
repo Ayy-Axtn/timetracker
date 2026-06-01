@@ -47,6 +47,17 @@ const createTodaysLogWindow = (): BrowserWindow => {
 /** Test-only accessor for the Today's Log E2E driver. */
 export const getTodaysLogWindowForTest = (): BrowserWindow | null => todaysLogWindow
 
+/**
+ * Tell the Today's Log window (if open) that block data changed, so it refetches
+ * the day it is viewing. Sent after every state-machine transition and editor
+ * mutation — that's how the log stays live while you start/pause/resume tasks.
+ */
+export const notifyBlocksChanged = (): void => {
+  if (todaysLogWindow && !todaysLogWindow.isDestroyed()) {
+    todaysLogWindow.webContents.send('blocks:changed')
+  }
+}
+
 // Open (creating if needed) and focus the Today's Log window. Used by the tray
 // and — once a second instance launches — by the single-instance handler.
 export const showTodaysLogWindow = (): void => {

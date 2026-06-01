@@ -45,6 +45,14 @@ const api = {
     ipcRenderer.invoke('blocks:backdate', input),
   copyToClipboard: (text: string): Promise<void> => ipcRenderer.invoke('clipboard:write', text),
 
+  // Fires when block data changes (a transition or an edit) so the Today's Log
+  // window can refetch the day it is viewing. Returns an unsubscribe function.
+  onBlocksChanged: (callback: () => void): (() => void) => {
+    const handler = (): void => callback()
+    ipcRenderer.on('blocks:changed', handler)
+    return () => ipcRenderer.removeListener('blocks:changed', handler)
+  },
+
   // Persist a new hotkey map only if every key registers; reports per-key result.
   setHotkeys: (map: HotkeyMap): Promise<{ ok: boolean; results: HotkeyResult[] }> =>
     ipcRenderer.invoke('triggers:set-hotkeys', map),

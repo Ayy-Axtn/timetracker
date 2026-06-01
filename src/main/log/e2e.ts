@@ -4,7 +4,7 @@ import { createEndedBlock, getBlockById, getBlocksForRange } from '../db/blocks'
 import { createTask } from '../db/tasks'
 import { localDayBounds } from '../time'
 import { formatClipboardLine } from '../../shared/format'
-import { getTodaysLogWindowForTest, showTodaysLogWindow } from '../windows'
+import { getTodaysLogWindowForTest, notifyBlocksChanged, showTodaysLogWindow } from '../windows'
 
 // Drives the real Today's Log window via executeJavaScript to verify the
 // renderer↔IPC↔DB round-trip: inline edit persists, delete persists, copy
@@ -131,4 +131,11 @@ const execute = async (): Promise<void> => {
 
   // Totals: Alpha (1h) + Gamma (1h) = 2h.
   check('total reflects the remaining blocks', await waitFor(`${sel('total-tracked')}.textContent === '2h'`))
+
+  // Live update: a change reported by the main process (as the state machine
+  // does after a transition) refreshes the open window without a manual reload.
+  const live = createTask({ name: 'Live' }, atToday(11, 0))
+  createEndedBlock({ taskId: live.id, startTime: atToday(11, 0), endTime: atToday(11, 30), summary: null })
+  notifyBlocksChanged()
+  check('open log refetches on a reported change', await waitFor(`document.querySelectorAll('[data-testid="log-row"]').length === 3`))
 }
