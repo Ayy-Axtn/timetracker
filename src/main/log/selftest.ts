@@ -11,7 +11,7 @@ import {
 } from '../db/blocks'
 import { createTask, getTaskById, updateTask } from '../db/tasks'
 import { localDayBounds } from '../time'
-import { formatClipboardLine, formatDuration } from '../../shared/format'
+import { formatDayExport, formatDuration } from '../../shared/format'
 
 // Unit tests for the Today's Log editor operations + formatting, against an
 // in-memory database. Guarded by TIMETRACKER_LOG_SELFTEST.
@@ -60,19 +60,25 @@ const execute = (): void => {
   check('formatDuration 60m → 1h', formatDuration(60 * 60_000) === '1h')
   check('formatDuration 5m → 5m', formatDuration(5 * 60_000) === '5m')
   check('formatDuration negative → 0m', formatDuration(-1000) === '0m')
-  check(
-    'clipboard line: full',
-    formatClipboardLine({ durationMs: 75 * 60_000, ticketId: 'TASK-123', text: 'Investigated login issue' }) ===
-      '1h 15m | TASK-123 | Investigated login issue'
-  )
-  check(
-    'clipboard line: no ticket drops the segment',
-    formatClipboardLine({ durationMs: 30 * 60_000, ticketId: null, text: 'Standup' }) === '30m | Standup'
-  )
-  check(
-    'clipboard line: bare duration when nothing else',
-    formatClipboardLine({ durationMs: 30 * 60_000, ticketId: null, text: '' }) === '30m'
-  )
+
+  // --- day export ---
+  reset()
+  {
+    const dayMs = new Date(2024, 5, 1, 12).getTime()
+    const task = createTask({ name: 'Login bug', ticketId: 'T-9' }, dayMs)
+    createEndedBlock({
+      taskId: task.id,
+      startTime: new Date(2024, 5, 1, 9, 0).getTime(),
+      endTime: new Date(2024, 5, 1, 10, 15).getTime(),
+      summary: 'traced it'
+    })
+    const bounds = localDayBounds(dayMs)
+    const text = formatDayExport(getBlocksForRange(bounds.start, bounds.end), { dayMs, now: dayMs })
+    check('day export shows the day total', text.includes('total 1h 15m'))
+    check('day export shows the block line', text.includes('Login bug') && text.includes('[T-9]') && text.includes('traced it'))
+    check('day export shows the duration', text.includes('1h 15m'))
+    check('day export shows a by-task breakdown', text.includes('By task:') && text.includes('Login bug: 1h 15m'))
+  }
 
   // --- back-date / createEndedBlock ---
   reset()

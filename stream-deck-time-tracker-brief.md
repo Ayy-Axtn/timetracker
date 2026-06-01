@@ -138,7 +138,7 @@ Modes:
   - Merge: combine two adjacent blocks (same task) into one
   - Split: split a block at a chosen timestamp
   - Delete: remove a block (hard delete)
-- Copy to clipboard per block, formatted for Autotask paste (e.g., "1h 15m | TASK-123 | Investigated login issue")
+- Export day: copy the whole day's log to the clipboard as a readable plain-text summary (one line per block — time range, duration, task, ticket, notes — plus a per-task breakdown and total). Used as reference for writing Autotask time-entry descriptions by hand; the app is a timer + notes pad, so per-block Autotask-formatted copy was dropped (it only partially filled the time-entry template).
 - Daily totals at the bottom (total tracked, breakdown by task)
 
 ### Tray icon

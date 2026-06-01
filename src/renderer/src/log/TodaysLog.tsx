@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { BackdateInput, BlockWithTask } from '../../../shared/models'
-import { formatClipboardLine, formatClock, formatDuration } from '../../../shared/format'
+import { formatClock, formatDayExport, formatDuration } from '../../../shared/format'
 import { EditableText } from './EditableText'
 import { BackdateForm } from './BackdateForm'
 
@@ -33,7 +33,7 @@ export function TodaysLog(): React.JSX.Element {
   const [showBackdate, setShowBackdate] = useState(false)
   const [splittingId, setSplittingId] = useState<number | null>(null)
   const [splitTime, setSplitTime] = useState('')
-  const [copiedId, setCopiedId] = useState<number | null>(null)
+  const [dayCopied, setDayCopied] = useState(false)
 
   const load = useCallback(async (): Promise<void> => {
     setBlocks(await window.api.getBlocksForDay(dayMs))
@@ -66,15 +66,10 @@ export function TodaysLog(): React.JSX.Element {
 
   const isToday = dayInputValue(dayMs) === dayInputValue(Date.now())
 
-  const copyRow = async (block: BlockWithTask): Promise<void> => {
-    const line = formatClipboardLine({
-      durationMs: blockDuration(block, now),
-      ticketId: block.ticketId,
-      text: block.summary || block.taskName
-    })
-    await window.api.copyToClipboard(line)
-    setCopiedId(block.id)
-    setTimeout(() => setCopiedId((c) => (c === block.id ? null : c)), 1500)
+  const exportDay = async (): Promise<void> => {
+    await window.api.copyToClipboard(formatDayExport(blocks, { dayMs, now }))
+    setDayCopied(true)
+    setTimeout(() => setDayCopied(false), 1500)
   }
 
   const confirmSplit = async (block: BlockWithTask): Promise<void> => {
@@ -115,16 +110,32 @@ export function TodaysLog(): React.JSX.Element {
             </button>
           )}
         </div>
-        <button className="btn" data-testid="add-block" onClick={() => setShowBackdate((s) => !s)}>
-          + Add block
-        </button>
+        <div className="header-actions">
+          <button className="btn" data-testid="export-day" onClick={exportDay}>
+            {dayCopied ? 'Copied!' : 'Export day'}
+          </button>
+          <button className="btn" data-testid="add-block" onClick={() => setShowBackdate((s) => !s)}>
+            + Add block
+          </button>
+        </div>
       </header>
 
       {showBackdate && (
         <BackdateForm dayMs={dayMs} onSubmit={onBackdate} onCancel={() => setShowBackdate(false)} />
       )}
 
+      <div className="log-table-scroll">
       <table className="log-table">
+        <colgroup>
+          <col className="col-time" />
+          <col className="col-time" />
+          <col className="col-dur" />
+          <col />
+          <col className="col-ticket" />
+          <col />
+          <col />
+          <col className="col-actions" />
+        </colgroup>
         <thead>
           <tr>
             <th>Start</th>
@@ -187,62 +198,59 @@ export function TodaysLog(): React.JSX.Element {
                     <span className="split-inline">
                       <input
                         type="time"
-                        className="field time"
+                        className="field split-time"
                         data-testid={`split-time-${block.id}`}
                         value={splitTime}
                         onChange={(e) => setSplitTime(e.target.value)}
                       />
                       <button
-                        className="icon-btn"
+                        className="btn tiny primary"
                         data-testid={`split-confirm-${block.id}`}
                         onClick={() => confirmSplit(block)}
                       >
-                        ✓
+                        Split
                       </button>
-                      <button className="icon-btn" onClick={() => setSplittingId(null)}>
-                        ✗
+                      <button className="btn tiny" onClick={() => setSplittingId(null)}>
+                        Cancel
                       </button>
                     </span>
                   ) : (
                     <>
-                      <button
-                        className="icon-btn"
-                        data-testid={`copy-${block.id}`}
-                        title="Copy for Autotask"
-                        onClick={() => copyRow(block)}
-                      >
-                        {copiedId === block.id ? '✓' : '⧉'}
-                      </button>
-                      {canMergeUp && (
+                      {index > 0 && block.state === 'ended' && (
                         <button
-                          className="icon-btn"
+                          className="btn tiny"
                           data-testid={`mergeup-${block.id}`}
-                          title="Merge into the row above"
+                          disabled={!canMergeUp}
+                          title={
+                            canMergeUp
+                              ? 'Merge into the row above'
+                              : 'Merge only works when the row above is the same, already-ended task'
+                          }
                           onClick={() => prev && window.api.mergeBlocks(prev.id, block.id).then(load)}
                         >
-                          ↥
+                          Merge↑
                         </button>
                       )}
                       {block.state === 'ended' && (
                         <button
-                          className="icon-btn"
+                          className="btn tiny"
                           data-testid={`split-${block.id}`}
-                          title="Split at a time"
+                          title="Split this block at a time"
                           onClick={() => {
                             setSplittingId(block.id)
                             setSplitTime(timeInputValue((block.startTime + (block.endTime ?? now)) / 2))
                           }}
                         >
-                          ⤲
+                          Split
                         </button>
                       )}
                       <button
-                        className="icon-btn danger"
+                        className="btn tiny danger"
                         data-testid={`delete-${block.id}`}
                         title="Delete"
                         onClick={() => window.api.deleteBlock(block.id).then(load)}
                       >
-                        🗑
+                        Delete
                       </button>
                     </>
                   )}
@@ -259,6 +267,7 @@ export function TodaysLog(): React.JSX.Element {
           )}
         </tbody>
       </table>
+      </div>
 
       <footer className="totals">
         <div className="total-main">

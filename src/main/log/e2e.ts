@@ -3,7 +3,6 @@ import { clipboard } from 'electron'
 import { createEndedBlock, getBlockById, getBlocksForRange } from '../db/blocks'
 import { createTask } from '../db/tasks'
 import { localDayBounds } from '../time'
-import { formatClipboardLine } from '../../shared/format'
 import { getTodaysLogWindowForTest, notifyBlocksChanged, showTodaysLogWindow } from '../windows'
 
 // Drives the real Today's Log window via executeJavaScript to verify the
@@ -104,13 +103,31 @@ const execute = async (): Promise<void> => {
   await keydown(`summary-${aBlock.id}-input`, 'Enter')
   check('inline summary edit persists to the DB', await waitUntil(() => getBlockById(aBlock.id)?.summary === 'reviewed'))
 
-  // Copy Alpha as an Autotask line. Wait for the renderer to reflect the edit
-  // first (its reload is a separate round-trip from the DB write).
+  // Let the renderer reflect the edit (its reload is a separate round-trip)
+  // before driving the next operation.
   await waitFor(`${sel(`summary-${aBlock.id}`)}.textContent === 'reviewed'`)
-  clipboard.writeText('')
-  await clickTestid(`copy-${aBlock.id}`)
-  const expectedLine = formatClipboardLine({ durationMs: 60 * 60_000, ticketId: 'A-1', text: 'reviewed' })
-  check('copy produces the Autotask line', await waitUntil(() => clipboard.readText() === expectedLine))
+
+  // Split Alpha (09:00–10:00) at 09:45 via the inline time control...
+  await clickTestid(`split-${aBlock.id}`)
+  if (!(await waitFor(sel(`split-time-${aBlock.id}`)))) throw new Error('split control never rendered')
+  await setValue(`split-time-${aBlock.id}`, '09:45')
+  await clickTestid(`split-confirm-${aBlock.id}`)
+  check('split cuts the block at the chosen time', await waitUntil(() => getBlockById(aBlock.id)?.endTime === atToday(9, 45)))
+  const today0 = localDayBounds(Date.now())
+  const half = getBlocksForRange(today0.start, today0.end).find(
+    (b) => b.taskId === alpha.id && b.startTime === atToday(9, 45)
+  )
+  check('split creates the second half', !!half && half.endTime === atToday(10, 0))
+
+  // ...then merge the two halves back together (adjacent, same task, both ended).
+  if (half) {
+    await waitFor(sel(`mergeup-${half.id}`))
+    await clickTestid(`mergeup-${half.id}`)
+    check(
+      'merge recombines the halves',
+      await waitUntil(() => getBlockById(half.id) === undefined && getBlockById(aBlock.id)?.endTime === atToday(10, 0))
+    )
+  }
 
   // Delete Beta.
   await clickTestid(`delete-${bBlock.id}`)
@@ -138,4 +155,15 @@ const execute = async (): Promise<void> => {
   createEndedBlock({ taskId: live.id, startTime: atToday(11, 0), endTime: atToday(11, 30), summary: null })
   notifyBlocksChanged()
   check('open log refetches on a reported change', await waitFor(`document.querySelectorAll('[data-testid="log-row"]').length === 3`))
+
+  // Export day copies a readable summary of the whole day to the clipboard.
+  clipboard.writeText('')
+  await clickTestid('export-day')
+  check(
+    'export day copies the day summary to the clipboard',
+    await waitUntil(() => {
+      const text = clipboard.readText()
+      return text.includes('Alpha') && text.includes('total ') && text.includes('By task:')
+    })
+  )
 }
