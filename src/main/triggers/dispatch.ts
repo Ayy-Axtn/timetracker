@@ -1,24 +1,25 @@
 import { appendFileSync } from 'node:fs'
-import { ACTION_LABELS, type TriggerAction } from '../../shared/actions'
+import type { TriggerAction } from '../../shared/actions'
 import { notify } from '../notifications'
+import { runAction } from '../state/runner'
 import { parseProtocolUrl } from './protocol'
 
 export type TriggerSource = 'protocol' | 'hotkey' | 'tray'
 
 /**
- * Central entry point for every trigger, regardless of source. Step 4 replaces
- * the placeholder body with the real state-machine transitions; for now each
- * trigger surfaces a toast so the whole pipeline is observable end to end.
+ * Central entry point for every trigger, regardless of source. Hands off to the
+ * state machine runner, which serialises transitions. Fire-and-forget: the
+ * caller (a hotkey/protocol/tray event) doesn't await the transition.
  */
 export const dispatchAction = (action: TriggerAction, source: TriggerSource): void => {
-  // E2E hook: when set, record dispatches to a file instead of toasting, so the
-  // protocol → single-instance → dispatch path can be asserted from a test.
+  // E2E hook: when set, record dispatches to a file instead of running them, so
+  // the protocol → single-instance → dispatch path can be asserted from a test.
   const sink = process.env['TIMETRACKER_TRIGGER_E2E']
   if (sink) {
     appendFileSync(sink, `${action}:${source}\n`)
     return
   }
-  notify(`${ACTION_LABELS[action]} — ${source}`, 'info')
+  void runAction(action)
 }
 
 /**

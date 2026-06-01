@@ -50,14 +50,14 @@ Depends on: step 1 (single-instance lock) and step 2 (so actions can touch state
 
 Depends on: step 2 (block/task repositories) and step 3 (triggers to drive transitions).
 
-- [ ] New Task transition: prompt-on-active resolution, create task + active block
-- [ ] End Task transition: 1-vs-many open-task handling, capture summary, mark block ended
-- [ ] Pause Task transition: active → paused preserving elapsed; no-op when nothing active
-- [ ] Resume Task transition: 0/1/many paused handling, auto-pause active first, new active block
-- [ ] "At most one active block" invariant enforced across all transitions
-- [ ] Heartbeat writes last-alive timestamp every 30–60s while a block is active
-- [ ] Crash-recovery reconciliation on launch: detect stranded `active`/`end_time=NULL` block, prompt Resume / End at last-alive / Discard (never invent durations)
-- [ ] Unit tests per transition
+- [x] New Task transition: prompt-on-active resolution, create task + active block
+- [x] End Task transition: 1-vs-many open-task handling, capture summary, mark block ended
+- [x] Pause Task transition: active → paused preserving elapsed; no-op when nothing active
+- [x] Resume Task transition: 0/1/many paused handling, auto-pause active first, new active block
+- [x] "At most one active block" invariant enforced across all transitions
+- [x] Heartbeat writes last-alive timestamp every 30–60s while a block is active
+- [x] Crash-recovery reconciliation on launch: detect stranded `active`/`end_time=NULL` block, prompt Resume / End at last-alive / Discard (never invent durations)
+- [x] Unit tests per transition
 
 **Done when:** every transition behaves per the brief with the single-active invariant held, and a mid-block crash is reconciled on next launch.
 

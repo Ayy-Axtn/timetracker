@@ -9,8 +9,10 @@ import { closeDatabase, initDatabase } from './db/connection'
 import { runSelfTest } from './db/selftest'
 import { findProtocolUrl, registerProtocol } from './triggers/protocol'
 import { applyHotkeys, unregisterHotkeys } from './triggers/hotkeys'
-import { handleProtocolActivation } from './triggers/dispatch'
+import { dispatchAction, handleProtocolActivation } from './triggers/dispatch'
 import { runTriggerSelfTest } from './triggers/selftest'
+import { runRecovery, shutdownState } from './state/runner'
+import { runStateSelfTest } from './state/selftest'
 
 // Pin the app/userData name so it matches the %APPDATA%\TimeTracker\ convention.
 app.setName('TimeTracker')
@@ -45,6 +47,10 @@ if (!gotLock) {
       app.exit(runTriggerSelfTest() ? 0 : 1)
       return
     }
+    if (process.env['TIMETRACKER_STATE_SELFTEST']) {
+      void runStateSelfTest().then((ok) => app.exit(ok ? 0 : 1))
+      return
+    }
 
     loadSettings()
     initDatabase()
@@ -62,7 +68,15 @@ if (!gotLock) {
       applyHotkeys()
     }
 
-    createTray()
+    // Pause/Resume from the tray go through the same dispatcher as the triggers.
+    createTray({
+      onPause: () => dispatchAction('pausetask', 'tray'),
+      onResume: () => dispatchAction('resumetask', 'tray')
+    })
+
+    // Reconcile a stranded active block from a crash/quit-while-running. Queued
+    // ahead of any user action, and it syncs the tray + heartbeat on completion.
+    if (!e2eSink) void runRecovery()
 
     // Cold start via protocol (app wasn't already running): Windows delivers the
     // URL in argv. Dispatch it; otherwise show the log window (not in E2E).
@@ -82,6 +96,7 @@ if (!gotLock) {
   })
 
   app.on('before-quit', () => {
+    shutdownState() // keep an accurate last-alive if a block is still active
     unregisterHotkeys()
     destroyTray()
     closeDatabase()
