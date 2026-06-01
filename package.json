@@ -15,17 +15,22 @@
     "typecheck:web": "tsc --noEmit -p tsconfig.web.json",
     "typecheck": "npm run typecheck:node && npm run typecheck:web",
     "gen:icons": "node scripts/gen-icons.mjs",
-    "smoke": "npm run build && node scripts/smoke.mjs"
+    "smoke": "npm run build && node scripts/smoke.mjs",
+    "db:selftest": "npm run build && node scripts/db-selftest.mjs",
+    "rebuild": "node scripts/rebuild-native.mjs"
   },
   "dependencies": {
+    "better-sqlite3": "^12.2.0",
     "zustand": "^5.0.3"
   },
   "devDependencies": {
+    "@electron/rebuild": "^4.0.1",
+    "@types/better-sqlite3": "^7.6.12",
     "@types/node": "^22.10.5",
     "@types/react": "^19.0.7",
     "@types/react-dom": "^19.0.3",
     "@vitejs/plugin-react": "^4.3.4",
-    "electron": "^42.3.0",
+    "electron": "^41.7.1",
     "electron-vite": "^3.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

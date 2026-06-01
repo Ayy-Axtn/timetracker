@@ -24,12 +24,12 @@ Foundation for everything else — start here.
 
 Depends on: step 1 (main process + IPC plumbing).
 
-- [ ] DB initialised on first launch at `%APPDATA%\TimeTracker\timer.db`
-- [ ] Schema migration creates `tasks` and `blocks` tables plus the three indexes
-- [ ] Repository functions for tasks (create, fetch recent within `recentTasksWindowDays`)
-- [ ] Repository functions for blocks (create, end, pause, query by day, edit fields, delete)
-- [ ] All queries use parameterised prepared statements; better-sqlite3 imported in main process only
-- [ ] better-sqlite3 rebuilt against Electron's ABI so it loads in the packaged/dev runtime
+- [x] DB initialised on first launch at `%APPDATA%\TimeTracker\timer.db`
+- [x] Schema migration creates `tasks` and `blocks` tables plus the three indexes
+- [x] Repository functions for tasks (create, fetch recent within `recentTasksWindowDays`)
+- [x] Repository functions for blocks (create, end, pause, query by day, edit fields, delete)
+- [x] All queries use parameterised prepared statements; better-sqlite3 imported in main process only
+- [x] better-sqlite3 rebuilt against Electron's ABI so it loads in the packaged/dev runtime
 
 **Done when:** the schema is created on first launch and tasks/blocks can be created and read back over IPC.
 

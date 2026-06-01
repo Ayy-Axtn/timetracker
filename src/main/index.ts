@@ -4,6 +4,8 @@ import { registerIpcHandlers } from './ipc'
 import { createTray, destroyTray } from './tray'
 import { hardenWebContents, installContentSecurityPolicy } from './security'
 import { showTodaysLogWindow } from './windows'
+import { closeDatabase, initDatabase } from './db/connection'
+import { runSelfTest } from './db/selftest'
 
 // Pin the app/userData name so it matches the %APPDATA%\TimeTracker\ convention.
 app.setName('TimeTracker')
@@ -24,7 +26,15 @@ if (!gotLock) {
   })
 
   app.whenReady().then(() => {
+    // Dev-only DB self-test, guarded by env var (npm run db:selftest). Runs
+    // against an in-memory database and exits without showing any UI.
+    if (process.env['TIMETRACKER_SELFTEST']) {
+      app.exit(runSelfTest() ? 0 : 1)
+      return
+    }
+
     loadSettings()
+    initDatabase()
     installContentSecurityPolicy()
     hardenWebContents()
     registerIpcHandlers()
@@ -42,5 +52,6 @@ if (!gotLock) {
 
   app.on('before-quit', () => {
     destroyTray()
+    closeDatabase()
   })
 }
