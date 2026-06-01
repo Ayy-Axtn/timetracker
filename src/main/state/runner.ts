@@ -65,6 +65,13 @@ export const runAction = (action: TriggerAction): Promise<void> => enqueue(() =>
 /** Reconcile a stranded block on launch (queued ahead of any user actions). */
 export const runRecovery = (): Promise<void> => enqueue(() => machine.recover().then(() => undefined))
 
+/**
+ * Re-derive side effects (tray + heartbeat) from the current DB state. The
+ * Today's Log editor calls this after a mutation, since deleting/editing a
+ * live block can change what's active or paused.
+ */
+export const resyncState = (): void => syncState()
+
 /** Finalise on quit: keep an accurate last-alive if a block is still active. */
 export const shutdownState = (): void => {
   if (getActiveBlock() !== undefined) writeHeartbeat()

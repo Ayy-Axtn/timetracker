@@ -1,12 +1,29 @@
-import { app, ipcMain } from 'electron'
+import { app, clipboard, ipcMain } from 'electron'
 import type { HotkeyMap, Settings } from '../shared/settings'
 import type { HotkeyResult } from '../shared/actions'
-import type { BlockWithTask, NewTaskInput, Task } from '../shared/models'
+import type {
+  BackdateInput,
+  Block,
+  BlockPatch,
+  BlockWithTask,
+  NewTaskInput,
+  Task,
+  TaskPatch
+} from '../shared/models'
 import { getSettings, updateSettings } from './settings'
-import { createTask, getRecentTasks } from './db/tasks'
-import { getBlocksForRange } from './db/blocks'
+import { createTask, getRecentTasks, updateTask } from './db/tasks'
+import {
+  createEndedBlock,
+  deleteBlock,
+  getBlocksForRange,
+  mergeBlocks,
+  splitBlock,
+  updateBlock
+} from './db/blocks'
+import { getDb } from './db/connection'
 import { localDayBounds } from './time'
 import { updateHotkeys } from './triggers/hotkeys'
+import { resyncState } from './state/runner'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -49,4 +66,65 @@ export const registerIpcHandlers = (): void => {
     'triggers:set-hotkeys',
     (_event, map: HotkeyMap): { ok: boolean; results: HotkeyResult[] } => updateHotkeys(map)
   )
+
+  // --- Today's Log editor. Each mutation resyncs the tray/heartbeat, since
+  // editing a live block can change what's active or paused. ---
+
+  ipcMain.handle('tasks:update', (_event, id: number, patch: TaskPatch): Task | undefined => {
+    const result = updateTask(id, patch)
+    resyncState()
+    return result
+  })
+
+  ipcMain.handle('blocks:update', (_event, id: number, patch: BlockPatch): Block | undefined => {
+    const result = updateBlock(id, patch)
+    resyncState()
+    return result
+  })
+
+  ipcMain.handle('blocks:delete', (_event, id: number): boolean => {
+    const result = deleteBlock(id)
+    resyncState()
+    return result
+  })
+
+  ipcMain.handle('blocks:merge', (_event, keepId: number, dropId: number): Block | undefined => {
+    const result = mergeBlocks(keepId, dropId)
+    resyncState()
+    return result
+  })
+
+  ipcMain.handle('blocks:split', (_event, id: number, atMs: number) => {
+    const result = splitBlock(id, atMs)
+    resyncState()
+    return result
+  })
+
+  ipcMain.handle('blocks:backdate', (_event, input: BackdateInput): Block => {
+    const name = typeof input?.name === 'string' ? input.name.trim() : ''
+    if (!name) throw new Error('Task name is required')
+    const start = Number(input.startTime)
+    const end = Number(input.endTime)
+    if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
+      throw new Error('Invalid time range')
+    }
+    const block = getDb().transaction(() => {
+      const task = createTask(
+        { name, ticketId: input.ticketId ?? null, notes: input.notes ?? null },
+        Date.now()
+      )
+      return createEndedBlock({
+        taskId: task.id,
+        startTime: start,
+        endTime: end,
+        summary: input.summary?.trim() || null
+      })
+    })()
+    resyncState()
+    return block
+  })
+
+  ipcMain.handle('clipboard:write', (_event, text: string): void => {
+    clipboard.writeText(String(text))
+  })
 }

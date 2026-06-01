@@ -43,6 +43,9 @@ const createTodaysLogWindow = (): BrowserWindow => {
   return window
 }
 
+/** Test-only accessor for the Today's Log E2E driver. */
+export const getTodaysLogWindowForTest = (): BrowserWindow | null => todaysLogWindow
+
 // Open (creating if needed) and focus the Today's Log window. Used by the tray
 // and — once a second instance launches — by the single-instance handler.
 export const showTodaysLogWindow = (): void => {

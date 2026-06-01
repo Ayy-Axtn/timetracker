@@ -79,12 +79,12 @@ Depends on: step 4 (transitions to invoke) and step 1 (window/IPC plumbing). Bui
 
 Depends on: step 2 (block queries) and step 1 (window plumbing). Build read → edit → operations.
 
-- [ ] Read-only listing of today's blocks (Start, End, Duration, Task, Ticket ID, Notes/Summary), opened from tray
-- [ ] Date picker to navigate previous days; day membership by `start_time`, midnight-spanning blocks not split, durations from epoch deltas
-- [ ] Inline editing of task name, ticket ID, notes, summary
-- [ ] Block operations: back-date (create), merge adjacent same-task, split at timestamp, delete (hard)
-- [ ] Copy-to-clipboard per block formatted for Autotask paste
-- [ ] Daily totals at bottom (total tracked + breakdown by task)
+- [x] Read-only listing of today's blocks (Start, End, Duration, Task, Ticket ID, Notes/Summary), opened from tray
+- [x] Date picker to navigate previous days; day membership by `start_time`, midnight-spanning blocks not split, durations from epoch deltas
+- [x] Inline editing of task name, ticket ID, notes, summary
+- [x] Block operations: back-date (create), merge adjacent same-task, split at timestamp, delete (hard)
+- [x] Copy-to-clipboard per block formatted for Autotask paste
+- [x] Daily totals at bottom (total tracked + breakdown by task)
 
 **Done when:** today and prior days can be viewed, blocks edited and operated on, and rows copied in Autotask format.
 

@@ -2,7 +2,15 @@ import { contextBridge, ipcRenderer } from 'electron'
 import type { IpcRendererEvent } from 'electron'
 import type { HotkeyMap, Settings } from '../shared/settings'
 import type { HotkeyResult } from '../shared/actions'
-import type { BlockWithTask, NewTaskInput, Task } from '../shared/models'
+import type {
+  BackdateInput,
+  Block,
+  BlockPatch,
+  BlockWithTask,
+  NewTaskInput,
+  Task,
+  TaskPatch
+} from '../shared/models'
 import type { PopupRequest, PopupResult } from '../shared/popup'
 
 // The entire surface the renderer is allowed to touch. Keep this minimal and
@@ -22,6 +30,20 @@ const api = {
   // referenceMs selects the day; omit for today.
   getBlocksForDay: (referenceMs?: number): Promise<BlockWithTask[]> =>
     ipcRenderer.invoke('blocks:forDay', referenceMs),
+
+  // Today's Log editor.
+  updateTask: (id: number, patch: TaskPatch): Promise<Task | undefined> =>
+    ipcRenderer.invoke('tasks:update', id, patch),
+  updateBlock: (id: number, patch: BlockPatch): Promise<Block | undefined> =>
+    ipcRenderer.invoke('blocks:update', id, patch),
+  deleteBlock: (id: number): Promise<boolean> => ipcRenderer.invoke('blocks:delete', id),
+  mergeBlocks: (keepId: number, dropId: number): Promise<Block | undefined> =>
+    ipcRenderer.invoke('blocks:merge', keepId, dropId),
+  splitBlock: (id: number, atMs: number): Promise<{ first: Block; second: Block } | undefined> =>
+    ipcRenderer.invoke('blocks:split', id, atMs),
+  backdateBlock: (input: BackdateInput): Promise<Block> =>
+    ipcRenderer.invoke('blocks:backdate', input),
+  copyToClipboard: (text: string): Promise<void> => ipcRenderer.invoke('clipboard:write', text),
 
   // Persist a new hotkey map only if every key registers; reports per-key result.
   setHotkeys: (map: HotkeyMap): Promise<{ ok: boolean; results: HotkeyResult[] }> =>

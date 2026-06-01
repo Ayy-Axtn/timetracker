@@ -105,6 +105,63 @@ export const updateBlock = (id: number, patch: BlockPatch): Block | undefined =>
 export const deleteBlock = (id: number): boolean =>
   getDb().prepare('DELETE FROM blocks WHERE id = ?').run(id).changes > 0
 
+// --- Today's Log editor operations ---
+// Merge/split deliberately operate on ENDED blocks only: active/paused blocks
+// are "live" and editing them would risk the state-machine invariants. They run
+// in transactions so a failed validation rolls back cleanly.
+
+/** Insert a fully-formed historical (ended) block — used by back-date and split. */
+export const createEndedBlock = (input: {
+  taskId: number
+  startTime: number
+  endTime: number
+  summary: string | null
+}): Block => {
+  const info = getDb()
+    .prepare("INSERT INTO blocks (task_id, start_time, end_time, state, summary) VALUES (?, ?, ?, 'ended', ?)")
+    .run(input.taskId, input.startTime, input.endTime, input.summary)
+  return getBlockById(Number(info.lastInsertRowid)) as Block
+}
+
+/** Combine two ended blocks of the same task into the first; deletes the second. */
+export const mergeBlocks = (keepId: number, dropId: number): Block | undefined =>
+  getDb().transaction(() => {
+    const keep = getBlockById(keepId)
+    const drop = getBlockById(dropId)
+    if (!keep || !drop) return undefined
+    if (keep.taskId !== drop.taskId) throw new Error('Cannot merge blocks from different tasks')
+    if (keep.state !== 'ended' || drop.state !== 'ended') throw new Error('Only ended blocks can be merged')
+
+    const startTime = Math.min(keep.startTime, drop.startTime)
+    const endTime = Math.max(keep.endTime ?? keep.startTime, drop.endTime ?? drop.startTime)
+    const summary = [keep.summary, drop.summary].filter((s): s is string => !!s).join(' / ') || null
+
+    getDb()
+      .prepare('UPDATE blocks SET start_time = ?, end_time = ?, summary = ? WHERE id = ?')
+      .run(startTime, endTime, summary, keepId)
+    deleteBlock(dropId)
+    return getBlockById(keepId)
+  })()
+
+/** Split an ended block at `atMs` into [start, atMs] and [atMs, end]. */
+export const splitBlock = (id: number, atMs: number): { first: Block; second: Block } | undefined =>
+  getDb().transaction(() => {
+    const block = getBlockById(id)
+    if (!block) return undefined
+    if (block.state !== 'ended' || block.endTime === null) throw new Error('Only ended blocks can be split')
+    if (!(block.startTime < atMs && atMs < block.endTime)) {
+      throw new Error('Split time must be inside the block')
+    }
+    getDb().prepare('UPDATE blocks SET end_time = ? WHERE id = ?').run(atMs, id)
+    const second = createEndedBlock({
+      taskId: block.taskId,
+      startTime: atMs,
+      endTime: block.endTime,
+      summary: null
+    })
+    return { first: getBlockById(id) as Block, second }
+  })()
+
 /**
  * Blocks whose start_time falls in [startMs, endMs), joined with their task,
  * ordered chronologically. A block belongs to the local calendar day of its

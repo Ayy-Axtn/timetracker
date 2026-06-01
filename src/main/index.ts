@@ -15,6 +15,8 @@ import { runRecovery, shutdownState } from './state/runner'
 import { runStateSelfTest } from './state/selftest'
 import { destroyPopup, initPopup } from './popup/popup'
 import { runPopupE2E } from './popup/e2e'
+import { runLogSelfTest } from './log/selftest'
+import { runLogE2E } from './log/e2e'
 
 // Pin the app/userData name so it matches the %APPDATA%\TimeTracker\ convention.
 app.setName('TimeTracker')
@@ -57,6 +59,17 @@ if (!gotLock) {
       loadSettings()
       initPopup()
       void runPopupE2E().then((ok) => app.exit(ok ? 0 : 1))
+      return
+    }
+    if (process.env['TIMETRACKER_LOG_SELFTEST']) {
+      app.exit(runLogSelfTest() ? 0 : 1)
+      return
+    }
+    if (process.env['TIMETRACKER_LOG_E2E']) {
+      loadSettings()
+      initDatabase()
+      registerIpcHandlers()
+      void runLogE2E().then((ok) => app.exit(ok ? 0 : 1))
       return
     }
 

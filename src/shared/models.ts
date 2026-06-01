@@ -54,3 +54,13 @@ export interface BlockPatch {
   summary?: string | null
   state?: BlockState
 }
+
+/** Manually adding a forgotten block from the Today's Log (back-date). */
+export interface BackdateInput {
+  name: string
+  ticketId?: string | null
+  notes?: string | null
+  startTime: number
+  endTime: number
+  summary?: string | null
+}
