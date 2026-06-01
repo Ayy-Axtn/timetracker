@@ -1,6 +1,6 @@
 {
   "name": "timetracker",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Local Windows tray app for personal time tracking, triggered by a Stream Deck via a custom protocol handler.",
   "author": "Ayy-Axtn",
   "license": "SEE LICENSE IN LICENSE",
