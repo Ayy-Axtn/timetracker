@@ -1,7 +1,43 @@
 import { join } from 'node:path'
 import { BrowserWindow, ipcMain, screen } from 'electron'
 import type { PopupMode, PopupPayload } from '../../shared/popup'
+import type { PopupPosition } from '../../shared/settings'
 import { getSettings } from '../settings'
+
+interface Rect {
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
+// Pure positioning maths (extracted so the clamp/centre behaviour is testable):
+// centre on the active monitor's work area, or anchor at the cursor and clamp so
+// the window never spills past a screen edge.
+export const computePopupBounds = (opts: {
+  position: PopupPosition
+  cursor: { x: number; y: number }
+  workArea: Rect
+  width: number
+  height: number
+}): Rect => {
+  const { position, cursor, workArea, width, height } = opts
+  if (position === 'activeMonitorCentre') {
+    return {
+      x: Math.round(workArea.x + (workArea.width - width) / 2),
+      y: Math.round(workArea.y + (workArea.height - height) / 2),
+      width,
+      height
+    }
+  }
+  const clamp = (value: number, lo: number, hi: number): number => Math.min(Math.max(value, lo), hi)
+  return {
+    x: clamp(cursor.x, workArea.x, workArea.x + workArea.width - width),
+    y: clamp(cursor.y, workArea.y, workArea.y + workArea.height - height),
+    width,
+    height
+  }
+}
 
 // The single reusable popup window plus the request/response machinery that lets
 // the main-process state machine show a mode and await the renderer's reply.
@@ -92,20 +128,17 @@ export const initPopup = (): void => {
 // anchored at the cursor and clamped to the work area so it never lands
 // off-screen near an edge.
 const sizeAndPosition = (window: BrowserWindow, mode: PopupMode): void => {
-  const height = MODE_HEIGHT[mode]
   const cursor = screen.getCursorScreenPoint()
   const { workArea } = screen.getDisplayNearestPoint(cursor)
-
-  let x: number
-  let y: number
-  if (getSettings().popupPosition === 'activeMonitorCentre') {
-    x = Math.round(workArea.x + (workArea.width - WIDTH) / 2)
-    y = Math.round(workArea.y + (workArea.height - height) / 2)
-  } else {
-    x = Math.min(Math.max(cursor.x, workArea.x), workArea.x + workArea.width - WIDTH)
-    y = Math.min(Math.max(cursor.y, workArea.y), workArea.y + workArea.height - height)
-  }
-  window.setBounds({ x, y, width: WIDTH, height })
+  window.setBounds(
+    computePopupBounds({
+      position: getSettings().popupPosition,
+      cursor,
+      workArea,
+      width: WIDTH,
+      height: MODE_HEIGHT[mode]
+    })
+  )
 }
 
 const waitReady = async (): Promise<boolean> => {

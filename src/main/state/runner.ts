@@ -1,8 +1,9 @@
 import type { TriggerAction } from '../../shared/actions'
 import { getActiveBlock, getPausedBlocks } from '../db/blocks'
+import { getTaskById } from '../db/tasks'
 import { getSettings } from '../settings'
 import { notify } from '../notifications'
-import { setTrayState, updateTrayMenu } from '../tray'
+import { formatTrayTooltip, setTrayState, setTrayTooltip, updateTrayMenu } from '../tray'
 import { createStateMachine } from './machine'
 import { popupPrompter } from '../popup/prompter'
 import { clearHeartbeat, readHeartbeat, startHeartbeat, stopHeartbeat, writeHeartbeat } from './heartbeat'
@@ -19,20 +20,39 @@ const machine = createStateMachine({
   notify
 })
 
-// Reflect the current DB state onto side effects: heartbeat runs iff a block is
-// active; the tray icon and menu mirror active/paused/idle.
+let tooltipTimer: ReturnType<typeof setInterval> | null = null
+
+// Set the tray tooltip to the running task + live elapsed (or a generic label).
+const refreshTooltip = (): void => {
+  const active = getActiveBlock()
+  if (active) {
+    setTrayTooltip(formatTrayTooltip('active', getTaskById(active.taskId)?.name, Date.now() - active.startTime))
+  } else {
+    setTrayTooltip(formatTrayTooltip(getPausedBlocks().length > 0 ? 'paused' : 'idle'))
+  }
+}
+
+// Reflect the current DB state onto side effects: heartbeat + ticking tooltip
+// run iff a block is active; the tray icon and menu mirror active/paused/idle.
 const syncState = (): void => {
   const hasActive = getActiveBlock() !== undefined
   const hasPaused = getPausedBlocks().length > 0
 
-  if (hasActive) startHeartbeat()
-  else {
+  if (hasActive) {
+    startHeartbeat()
+    if (!tooltipTimer) tooltipTimer = setInterval(refreshTooltip, 1000)
+  } else {
     stopHeartbeat()
     clearHeartbeat()
+    if (tooltipTimer) {
+      clearInterval(tooltipTimer)
+      tooltipTimer = null
+    }
   }
 
   setTrayState(hasActive ? 'active' : hasPaused ? 'paused' : 'idle')
   updateTrayMenu({ hasActive, hasPaused })
+  refreshTooltip()
 }
 
 const dispatch = (action: TriggerAction): Promise<void> => {
@@ -77,4 +97,8 @@ export const shutdownState = (): void => {
   if (getActiveBlock() !== undefined) writeHeartbeat()
   else clearHeartbeat()
   stopHeartbeat()
+  if (tooltipTimer) {
+    clearInterval(tooltipTimer)
+    tooltipTimer = null
+  }
 }

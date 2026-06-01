@@ -24,6 +24,8 @@
     "popup:e2e": "npm run build && node scripts/popup-e2e.mjs",
     "log:selftest": "npm run build && node scripts/log-selftest.mjs",
     "log:e2e": "npm run build && node scripts/log-e2e.mjs",
+    "config:selftest": "npm run build && node scripts/config-selftest.mjs",
+    "settings:e2e": "npm run build && node scripts/settings-e2e.mjs",
     "rebuild": "node scripts/rebuild-native.mjs"
   },
   "dependencies": {

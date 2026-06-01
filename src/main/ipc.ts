@@ -10,7 +10,7 @@ import type {
   Task,
   TaskPatch
 } from '../shared/models'
-import { getSettings, updateSettings } from './settings'
+import { getSettings } from './settings'
 import { createTask, getRecentTasks, updateTask } from './db/tasks'
 import {
   createEndedBlock,
@@ -23,6 +23,7 @@ import {
 import { getDb } from './db/connection'
 import { localDayBounds } from './time'
 import { updateHotkeys } from './triggers/hotkeys'
+import { applySettings } from './settings-actions'
 import { resyncState } from './state/runner'
 
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -35,8 +36,10 @@ export const registerIpcHandlers = (): void => {
   ipcMain.handle('app:get-version', () => app.getVersion())
 
   ipcMain.handle('settings:get', (): Settings => getSettings())
+  // applySettings persists and applies any OS-level side effect that changed
+  // (launch-at-startup, protocol registration, hotkey enablement).
   ipcMain.handle('settings:update', (_event, patch: Partial<Settings>): Settings =>
-    updateSettings(patch)
+    applySettings(patch)
   )
 
   ipcMain.handle('tasks:create', (_event, input: NewTaskInput): Task => {
@@ -64,7 +67,11 @@ export const registerIpcHandlers = (): void => {
   // registers, so a user can't lock themselves out (used by the settings UI).
   ipcMain.handle(
     'triggers:set-hotkeys',
-    (_event, map: HotkeyMap): { ok: boolean; results: HotkeyResult[] } => updateHotkeys(map)
+    (_event, map: HotkeyMap): { ok: boolean; results: HotkeyResult[] } => {
+      const result = updateHotkeys(map)
+      resyncState() // clears a trigger-error tray state once keys register cleanly
+      return result
+    }
   )
 
   // --- Today's Log editor. Each mutation resyncs the tray/heartbeat, since

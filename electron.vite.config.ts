@@ -30,11 +30,12 @@ export default defineConfig({
     root: 'src/renderer',
     build: {
       rollupOptions: {
-        // Two windows, two entries from one bundle: the Today's Log window and
-        // the reusable popup window.
+        // Three windows from one bundle: the Today's Log window, the reusable
+        // popup window, and the settings window.
         input: {
           index: resolve(__dirname, 'src/renderer/index.html'),
-          popup: resolve(__dirname, 'src/renderer/popup.html')
+          popup: resolve(__dirname, 'src/renderer/popup.html'),
+          settings: resolve(__dirname, 'src/renderer/settings.html')
         }
       }
     },

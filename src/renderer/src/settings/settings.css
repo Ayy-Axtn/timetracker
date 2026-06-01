@@ -1,0 +1,109 @@
+.settings {
+  padding: 1rem 1.25rem;
+  max-width: 480px;
+}
+
+.settings h1 {
+  margin: 0 0 1rem;
+  font-size: 1.3rem;
+}
+
+.settings section {
+  margin-bottom: 1.4rem;
+}
+
+.settings h2 {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #9ad29a;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.3rem 0;
+  font-size: 0.9rem;
+}
+
+.row input[type='checkbox'] {
+  width: 1rem;
+  height: 1rem;
+}
+
+.field {
+  background: #1b1b1b;
+  border: 1px solid #3d3d3d;
+  border-radius: 4px;
+  color: #e8e8e8;
+  font: inherit;
+  font-size: 0.88rem;
+  padding: 0.3rem 0.45rem;
+  color-scheme: dark;
+}
+.field:focus {
+  outline: none;
+  border-color: #4f8a4f;
+}
+.field.narrow {
+  width: 5rem;
+}
+
+code {
+  background: #2a2a2a;
+  padding: 0.05rem 0.3rem;
+  border-radius: 3px;
+  font-size: 0.82rem;
+}
+
+.hotkeys {
+  margin-top: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.hotkey-row {
+  display: grid;
+  grid-template-columns: 7rem 1fr;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.88rem;
+}
+.hotkey-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-top: 0.3rem;
+}
+.hotkey-message {
+  font-size: 0.82rem;
+  color: #c9b06b;
+}
+
+.btn {
+  padding: 0.4rem 0.8rem;
+  background: #333;
+  border: 1px solid #4a4a4a;
+  border-radius: 4px;
+  color: #e8e8e8;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.btn:hover {
+  background: #3d3d3d;
+}
+.btn.primary {
+  background: #2f5d33;
+  border-color: #3c7340;
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+select.field {
+  cursor: pointer;
+}

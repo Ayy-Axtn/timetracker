@@ -1,14 +1,15 @@
 import { join } from 'node:path'
 import { BrowserWindow } from 'electron'
 
-// Load the renderer from the Vite dev server when running `electron-vite dev`,
-// otherwise from the built file. ELECTRON_RENDERER_URL is set by electron-vite.
-const loadRenderer = (window: BrowserWindow): void => {
+// Load a renderer entry from the Vite dev server when running `electron-vite
+// dev`, otherwise from the built file. ELECTRON_RENDERER_URL is set by
+// electron-vite; 'index' is the Today's Log entry, 'settings' the settings one.
+const loadRenderer = (window: BrowserWindow, entry: 'index' | 'settings'): void => {
   const devUrl = process.env['ELECTRON_RENDERER_URL']
   if (devUrl) {
-    void window.loadURL(devUrl)
+    void window.loadURL(entry === 'index' ? devUrl : `${devUrl}/${entry}.html`)
   } else {
-    void window.loadFile(join(__dirname, '../renderer/index.html'))
+    void window.loadFile(join(__dirname, `../renderer/${entry}.html`))
   }
 }
 
@@ -39,7 +40,7 @@ const createTodaysLogWindow = (): BrowserWindow => {
     todaysLogWindow = null
   })
 
-  loadRenderer(window)
+  loadRenderer(window, 'index')
   return window
 }
 
@@ -55,4 +56,37 @@ export const showTodaysLogWindow = (): void => {
   if (todaysLogWindow.isMinimized()) todaysLogWindow.restore()
   todaysLogWindow.show()
   todaysLogWindow.focus()
+}
+
+let settingsWindow: BrowserWindow | null = null
+
+const createSettingsWindow = (): BrowserWindow => {
+  const window = new BrowserWindow({
+    width: 480,
+    height: 600,
+    show: false,
+    autoHideMenuBar: true,
+    title: 'TimeTracker Settings',
+    webPreferences: secureWebPreferences
+  })
+
+  window.on('ready-to-show', () => window.show())
+  window.on('closed', () => {
+    settingsWindow = null
+  })
+
+  loadRenderer(window, 'settings')
+  return window
+}
+
+/** Test-only accessor for the settings E2E driver. */
+export const getSettingsWindowForTest = (): BrowserWindow | null => settingsWindow
+
+export const showSettingsWindow = (): void => {
+  if (!settingsWindow || settingsWindow.isDestroyed()) {
+    settingsWindow = createSettingsWindow()
+  }
+  if (settingsWindow.isMinimized()) settingsWindow.restore()
+  settingsWindow.show()
+  settingsWindow.focus()
 }

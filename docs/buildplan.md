@@ -92,11 +92,11 @@ Depends on: step 2 (block queries) and step 1 (window plumbing). Build read → 
 
 Depends on: steps 5–6 (popup + log) and step 3 (trigger feedback surface).
 
-- [ ] Tray icon reflects state: idle (grey), active (green), paused (amber), trigger error
-- [ ] Tray tooltip shows current task name + elapsed when active
-- [ ] State-change toasts wired to the `showStateToasts` setting (double as trigger-health surface)
-- [ ] Settings UI: launch-at-startup, toasts, trigger enables + hotkey mapping, popup position
-- [ ] Popup positioning per `popupPosition` (`cursor` clamped to screen bounds, or `activeMonitorCentre`)
+- [x] Tray icon reflects state: idle (grey), active (green), paused (amber), trigger error
+- [x] Tray tooltip shows current task name + elapsed when active
+- [x] State-change toasts wired to the `showStateToasts` setting (double as trigger-health surface)
+- [x] Settings UI: launch-at-startup, toasts, trigger enables + hotkey mapping, popup position
+- [x] Popup positioning per `popupPosition` (`cursor` clamped to screen bounds, or `activeMonitorCentre`)
 
 **Done when:** state is legible from the tray, toasts/settings work, and the popup positions correctly without going off-screen.
 

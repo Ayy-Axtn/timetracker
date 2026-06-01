@@ -1,14 +1,14 @@
 import { appendFileSync } from 'node:fs'
 import { app } from 'electron'
-import { getSettings, loadSettings } from './settings'
+import { loadSettings } from './settings'
 import { registerIpcHandlers } from './ipc'
 import { createTray, destroyTray } from './tray'
 import { hardenWebContents, installContentSecurityPolicy } from './security'
-import { showTodaysLogWindow } from './windows'
+import { showSettingsWindow, showTodaysLogWindow } from './windows'
 import { closeDatabase, initDatabase } from './db/connection'
 import { runSelfTest } from './db/selftest'
-import { findProtocolUrl, registerProtocol } from './triggers/protocol'
-import { applyHotkeys, unregisterHotkeys } from './triggers/hotkeys'
+import { findProtocolUrl } from './triggers/protocol'
+import { unregisterHotkeys } from './triggers/hotkeys'
 import { dispatchAction, handleProtocolActivation } from './triggers/dispatch'
 import { runTriggerSelfTest } from './triggers/selftest'
 import { runRecovery, shutdownState } from './state/runner'
@@ -17,6 +17,9 @@ import { destroyPopup, initPopup } from './popup/popup'
 import { runPopupE2E } from './popup/e2e'
 import { runLogSelfTest } from './log/selftest'
 import { runLogE2E } from './log/e2e'
+import { applyStartupSideEffects } from './settings-actions'
+import { runConfigSelfTest } from './config/selftest'
+import { runSettingsE2E } from './settings/e2e'
 
 // Pin the app/userData name so it matches the %APPDATA%\TimeTracker\ convention.
 app.setName('TimeTracker')
@@ -72,6 +75,17 @@ if (!gotLock) {
       void runLogE2E().then((ok) => app.exit(ok ? 0 : 1))
       return
     }
+    if (process.env['TIMETRACKER_CONFIG_SELFTEST']) {
+      app.exit(runConfigSelfTest() ? 0 : 1)
+      return
+    }
+    if (process.env['TIMETRACKER_SETTINGS_E2E']) {
+      loadSettings()
+      initDatabase(':memory:') // the hotkey handler resyncs state, which reads the DB
+      registerIpcHandlers()
+      void runSettingsE2E().then((ok) => app.exit(ok ? 0 : 1))
+      return
+    }
 
     loadSettings()
     initDatabase()
@@ -81,18 +95,18 @@ if (!gotLock) {
 
     const e2eSink = process.env['TIMETRACKER_TRIGGER_E2E']
 
-    // Triggers: protocol is primary, hotkeys are the fallback. Skipped in E2E
-    // mode, which exercises only the argv → second-instance dispatch path and
-    // must not mutate OS protocol registration or grab global keys.
-    if (!e2eSink) {
-      if (getSettings().triggers.protocolEnabled) registerProtocol()
-      applyHotkeys()
-    }
+    // Sync OS-level side effects (launch-at-startup, protocol registration,
+    // hotkeys) to the persisted settings. Skipped in trigger-E2E mode, which
+    // exercises only the argv → second-instance path and must not mutate OS
+    // protocol registration or grab global keys.
+    if (!e2eSink) applyStartupSideEffects()
 
-    // Pause/Resume from the tray go through the same dispatcher as the triggers.
+    // Pause/Resume go through the same dispatcher as the triggers; Settings
+    // opens the settings window.
     createTray({
       onPause: () => dispatchAction('pausetask', 'tray'),
-      onResume: () => dispatchAction('resumetask', 'tray')
+      onResume: () => dispatchAction('resumetask', 'tray'),
+      onSettings: () => showSettingsWindow()
     })
 
     // The reusable popup window backs every prompt the state machine awaits.
