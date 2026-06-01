@@ -26,7 +26,8 @@
     "log:e2e": "npm run build && node scripts/log-e2e.mjs",
     "config:selftest": "npm run build && node scripts/config-selftest.mjs",
     "settings:e2e": "npm run build && node scripts/settings-e2e.mjs",
-    "rebuild": "node scripts/rebuild-native.mjs"
+    "rebuild": "electron-rebuild --force --only better-sqlite3",
+    "package": "npm run build && electron-builder --win"
   },
   "dependencies": {
     "better-sqlite3": "^12.2.0",
@@ -35,6 +36,7 @@
   "devDependencies": {
     "@electron/rebuild": "^4.0.1",
     "@types/better-sqlite3": "^7.6.12",
+    "electron-builder": "^26.0.0",
     "@types/node": "^22.10.5",
     "@types/react": "^19.0.7",
     "@types/react-dom": "^19.0.3",

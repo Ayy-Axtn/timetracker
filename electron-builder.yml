@@ -1,0 +1,47 @@
+appId: com.timetracker.app
+productName: TimeTracker
+
+directories:
+  output: release
+
+# Default file set (everything) minus source, configs, and dev-only files; the
+# build output (out/), resources/, package.json, and production node_modules are
+# included automatically.
+files:
+  - '!src/**'
+  - '!scripts/**'
+  - '!docs/**'
+  - '!**/*.map'
+  - '!electron.vite.config.ts'
+  - '!electron-builder.yml'
+  - '!tsconfig*.json'
+  - '!*.md'
+  - '!.gitignore'
+
+# better-sqlite3 is a native module — its .node must live outside the asar to be
+# loadable. The tray icons (referenced from the asar root) are unpacked too so
+# nativeImage reads them cleanly.
+asar: true
+asarUnpack:
+  - resources/**
+  - node_modules/better-sqlite3/**
+
+# Register timetracker:// at install time (the app also registers at runtime).
+protocols:
+  - name: TimeTracker
+    schemes:
+      - timetracker
+
+win:
+  target:
+    - nsis
+  icon: resources/icon.png
+  artifactName: ${productName}-${version}-setup.${ext}
+
+nsis:
+  oneClick: false
+  perMachine: false # per-user install — no admin / UAC
+  allowToChangeInstallationDirectory: false
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: TimeTracker

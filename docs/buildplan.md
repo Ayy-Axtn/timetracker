@@ -104,11 +104,11 @@ Depends on: steps 5–6 (popup + log) and step 3 (trigger feedback surface).
 
 Depends on: a working app (steps 1–7) and step 2's ABI rebuild.
 
-- [ ] electron-builder NSIS config, per-user install (no admin, local appdata)
-- [ ] `timetracker://` protocol registered on install
-- [ ] DB initialised on first launch of the installed build
-- [ ] Launch-at-startup registered by default, toggleable
-- [ ] Stream Deck profile (`.streamDeckProfile`) shipped alongside, buttons using System: Open → `timetracker://` URLs
-- [ ] Installer produces a runnable per-user app with working protocol triggers end-to-end
+- [x] electron-builder NSIS config, per-user install (no admin, local appdata)
+- [x] `timetracker://` protocol registered — at runtime on first launch (verified to cold-launch the installed app); electron-builder's install-time `protocols` entry doesn't fire for per-user, so runtime registration is what's relied on
+- [x] DB initialised on first launch of the installed build
+- [x] Launch-at-startup registered by default, toggleable (login item set on first launch when packaged; toggle in Settings)
+- [~] Stream Deck setup shipped as `streamdeck/README.md` (all three trigger methods + URLs/keys); a binary `.streamDeckProfile` is deferred — System: Open behaviour with custom protocols varies by Stream Deck version, so a blind profile isn't reliably importable. Export one from the Stream Deck app if a shareable file is wanted.
+- [x] Installer produces a runnable per-user app with working protocol triggers end-to-end (verified: silent install → `timetracker://` cold-start launches the app → clean uninstall)
 
 **Done when:** a per-user installer builds, installs without admin, registers the protocol, and the Stream Deck profile drives the installed app.
