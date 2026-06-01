@@ -65,13 +65,13 @@ Depends on: step 2 (block/task repositories) and step 3 (triggers to drive trans
 
 Depends on: step 4 (transitions to invoke) and step 1 (window/IPC plumbing). Build modes in this order.
 
-- [ ] Reusable frameless always-on-top popup window, hidden by default, steals focus when shown
-- [ ] New Task mode: name (required, autofocused) + ticket ID + notes + recent-tasks autocomplete (arrow/fuzzy)
-- [ ] End Task picker + End Task summary modes
-- [ ] Resume Task picker mode
-- [ ] Pause-or-End prompt mode
-- [ ] Crash-recovery prompt mode
-- [ ] Keyboard-first throughout: Enter submits, Esc cancels, Tab between fields, arrows navigate lists
+- [x] Reusable frameless always-on-top popup window, hidden by default, steals focus when shown
+- [x] New Task mode: name (required, autofocused) + ticket ID + notes + recent-tasks autocomplete (arrow/fuzzy)
+- [x] End Task picker + End Task summary modes
+- [x] Resume Task picker mode
+- [x] Pause-or-End prompt mode
+- [x] Crash-recovery prompt mode
+- [x] Keyboard-first throughout: Enter submits, Esc cancels, Tab between fields, arrows navigate lists
 
 **Done when:** every transition that needs UI has a working popup mode, all keyboard-driven.
 

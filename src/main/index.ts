@@ -13,6 +13,8 @@ import { dispatchAction, handleProtocolActivation } from './triggers/dispatch'
 import { runTriggerSelfTest } from './triggers/selftest'
 import { runRecovery, shutdownState } from './state/runner'
 import { runStateSelfTest } from './state/selftest'
+import { destroyPopup, initPopup } from './popup/popup'
+import { runPopupE2E } from './popup/e2e'
 
 // Pin the app/userData name so it matches the %APPDATA%\TimeTracker\ convention.
 app.setName('TimeTracker')
@@ -51,6 +53,12 @@ if (!gotLock) {
       void runStateSelfTest().then((ok) => app.exit(ok ? 0 : 1))
       return
     }
+    if (process.env['TIMETRACKER_POPUP_E2E']) {
+      loadSettings()
+      initPopup()
+      void runPopupE2E().then((ok) => app.exit(ok ? 0 : 1))
+      return
+    }
 
     loadSettings()
     initDatabase()
@@ -73,6 +81,9 @@ if (!gotLock) {
       onPause: () => dispatchAction('pausetask', 'tray'),
       onResume: () => dispatchAction('resumetask', 'tray')
     })
+
+    // The reusable popup window backs every prompt the state machine awaits.
+    if (!e2eSink) initPopup()
 
     // Reconcile a stranded active block from a crash/quit-while-running. Queued
     // ahead of any user action, and it syncs the tray + heartbeat on completion.
@@ -98,6 +109,7 @@ if (!gotLock) {
   app.on('before-quit', () => {
     shutdownState() // keep an accurate last-alive if a block is still active
     unregisterHotkeys()
+    destroyPopup()
     destroyTray()
     closeDatabase()
   })

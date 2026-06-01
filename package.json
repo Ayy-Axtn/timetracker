@@ -21,6 +21,7 @@
     "triggers:e2e": "npm run build && node scripts/triggers-e2e.mjs",
     "state:selftest": "npm run build && node scripts/state-selftest.mjs",
     "state:integration": "npm run build && node scripts/state-integration.mjs",
+    "popup:e2e": "npm run build && node scripts/popup-e2e.mjs",
     "rebuild": "node scripts/rebuild-native.mjs"
   },
   "dependencies": {

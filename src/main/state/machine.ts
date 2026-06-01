@@ -1,4 +1,5 @@
 import type { Block, NewTaskInput, Task } from '../../shared/models'
+import type { CrashRecoveryChoice, OpenTaskView } from '../../shared/popup'
 import { getDb } from '../db/connection'
 import {
   createBlock,
@@ -10,7 +11,7 @@ import {
   pauseBlock
 } from '../db/blocks'
 import { createTask, getRecentTasks, getTaskById } from '../db/tasks'
-import type { CrashRecoveryChoice, OpenTaskView, Prompter } from './prompter'
+import type { Prompter } from './prompter'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 

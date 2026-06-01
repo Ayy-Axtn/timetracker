@@ -4,7 +4,7 @@ import { getSettings } from '../settings'
 import { notify } from '../notifications'
 import { setTrayState, updateTrayMenu } from '../tray'
 import { createStateMachine } from './machine'
-import { interimPrompter } from './interim-prompter'
+import { popupPrompter } from '../popup/prompter'
 import { clearHeartbeat, readHeartbeat, startHeartbeat, stopHeartbeat, writeHeartbeat } from './heartbeat'
 
 // Production wiring of the state machine. Lives here (not in machine.ts) so the
@@ -12,7 +12,7 @@ import { clearHeartbeat, readHeartbeat, startHeartbeat, stopHeartbeat, writeHear
 // the action queue, the heartbeat lifecycle, and the tray reflection.
 
 const machine = createStateMachine({
-  prompter: interimPrompter,
+  prompter: popupPrompter,
   now: () => Date.now(),
   recentWindowDays: () => getSettings().recentTasksWindowDays,
   readLastAlive: () => readHeartbeat(),

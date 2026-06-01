@@ -1,0 +1,195 @@
+:root {
+  color-scheme: dark;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.popup-body {
+  margin: 0;
+  overflow: hidden;
+  user-select: none;
+}
+
+.popup {
+  position: relative;
+  height: 100vh;
+  padding: 1rem;
+  background: #232323;
+  color: #e8e8e8;
+  border: 1px solid #3a3a3a;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+}
+
+.popup-close {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.5rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: none;
+  background: transparent;
+  color: #8a8a8a;
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.popup-close:hover {
+  background: #3a3a3a;
+  color: #e8e8e8;
+}
+
+.mode {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  height: 100%;
+}
+
+.mode-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #9ad29a;
+}
+
+.mode-text {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #cfcfcf;
+}
+
+.field {
+  width: 100%;
+  padding: 0.45rem 0.55rem;
+  background: #1b1b1b;
+  border: 1px solid #3d3d3d;
+  border-radius: 4px;
+  color: #e8e8e8;
+  font: inherit;
+  font-size: 0.9rem;
+  resize: none;
+}
+.field:focus {
+  outline: none;
+  border-color: #4f8a4f;
+}
+
+.recent,
+.picker {
+  list-style: none;
+  margin: 0;
+  padding: 0.2rem;
+  background: #1b1b1b;
+  border: 1px solid #3d3d3d;
+  border-radius: 4px;
+  overflow-y: auto;
+  flex: 1 1 auto;
+}
+.picker:focus {
+  outline: none;
+  border-color: #4f8a4f;
+}
+
+.recent {
+  max-height: 5.5rem;
+  flex: 0 1 auto;
+}
+
+.recent-item,
+.picker-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.45rem;
+  border-radius: 3px;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+.recent-item.highlighted,
+.picker-item.highlighted {
+  background: #34503a;
+}
+
+.recent-name,
+.picker-name {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recent-ticket,
+.picker-ticket {
+  color: #9aa8c0;
+  font-size: 0.8rem;
+}
+
+.picker-state {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0.05rem 0.3rem;
+  border-radius: 3px;
+}
+.picker-state.active {
+  background: #2f5d33;
+  color: #b6e3b6;
+}
+.picker-state.paused {
+  background: #6b5410;
+  color: #f0d493;
+}
+
+.picker-time {
+  color: #8a8a8a;
+  font-size: 0.78rem;
+}
+
+.buttons {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: auto;
+}
+.buttons.column {
+  flex-direction: column;
+}
+
+.btn {
+  flex: 1 1 auto;
+  padding: 0.5rem 0.6rem;
+  background: #333;
+  border: 1px solid #4a4a4a;
+  border-radius: 4px;
+  color: #e8e8e8;
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.btn:hover {
+  background: #3d3d3d;
+}
+.btn:focus {
+  outline: none;
+  border-color: #4f8a4f;
+  box-shadow: 0 0 0 2px rgba(79, 138, 79, 0.4);
+}
+.btn.primary {
+  background: #2f5d33;
+  border-color: #3c7340;
+}
+.btn.danger:hover {
+  background: #5d2f2f;
+  border-color: #733c3c;
+}
+
+.hint {
+  margin-top: 0.2rem;
+  color: #777;
+  font-size: 0.75rem;
+}
