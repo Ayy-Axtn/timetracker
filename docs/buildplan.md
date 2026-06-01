@@ -37,12 +37,12 @@ Depends on: step 1 (main process + IPC plumbing).
 
 Depends on: step 1 (single-instance lock) and step 2 (so actions can touch state).
 
-- [ ] `timetracker://` registered via `setAsDefaultProtocolClient`
-- [ ] `second-instance` handler parses the protocol URL and dispatches the action (primary path)
-- [ ] URL parsing validates against the known action set (`newtask`/`endtask`/`pausetask`/`resumetask`); unrecognised input ignored with a toast, never path-constructed or eval'd
-- [ ] Global hotkeys F13–F16 registered via `globalShortcut` as fallback, mappable in settings
-- [ ] Per-key registration success checked; any failure surfaced via toast + tray error state (no silent failure)
-- [ ] Hotkey overrides validated against successful `globalShortcut.register` before being persisted
+- [x] `timetracker://` registered via `setAsDefaultProtocolClient`
+- [x] `second-instance` handler parses the protocol URL and dispatches the action (primary path)
+- [x] URL parsing validates against the known action set (`newtask`/`endtask`/`pausetask`/`resumetask`); unrecognised input ignored with a toast, never path-constructed or eval'd
+- [x] Global hotkeys F13–F16 registered via `globalShortcut` as fallback, mappable in settings
+- [x] Per-key registration success checked; any failure surfaced via toast + tray error state (no silent failure)
+- [x] Hotkey overrides validated against successful `globalShortcut.register` before being persisted
 
 **Done when:** all four actions fire via protocol URLs through the single-instance handler, with hotkeys working as fallback and registration failures surfaced.
 

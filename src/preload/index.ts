@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import type { Settings } from '../shared/settings'
+import type { HotkeyMap, Settings } from '../shared/settings'
+import type { HotkeyResult } from '../shared/actions'
 import type { BlockWithTask, NewTaskInput, Task } from '../shared/models'
 
 // The entire surface the renderer is allowed to touch. Keep this minimal and
@@ -18,7 +19,11 @@ const api = {
 
   // referenceMs selects the day; omit for today.
   getBlocksForDay: (referenceMs?: number): Promise<BlockWithTask[]> =>
-    ipcRenderer.invoke('blocks:forDay', referenceMs)
+    ipcRenderer.invoke('blocks:forDay', referenceMs),
+
+  // Persist a new hotkey map only if every key registers; reports per-key result.
+  setHotkeys: (map: HotkeyMap): Promise<{ ok: boolean; results: HotkeyResult[] }> =>
+    ipcRenderer.invoke('triggers:set-hotkeys', map)
 }
 
 export type Api = typeof api

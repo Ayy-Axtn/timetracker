@@ -1,0 +1,39 @@
+// Launches the built app in trigger-self-test mode, which verifies protocol
+// parsing, global-hotkey registration, validate-before-persist, and protocol
+// registration in the real Electron runtime, writing results to a file.
+import { spawn } from 'node:child_process'
+import { createRequire } from 'node:module'
+import { readFileSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+
+const require = createRequire(import.meta.url)
+const electron = require('electron')
+const outFile = join(tmpdir(), `timetracker-triggers-${process.pid}.json`)
+
+const child = spawn(electron, ['.'], {
+  stdio: 'ignore',
+  env: { ...process.env, TIMETRACKER_TRIGGER_SELFTEST: '1', TIMETRACKER_TRIGGER_SELFTEST_OUT: outFile }
+})
+
+child.on('error', (err) => {
+  console.error(`Failed to launch Electron: ${err.message}`)
+  process.exit(1)
+})
+
+child.on('exit', (code) => {
+  let result
+  try {
+    result = JSON.parse(readFileSync(outFile, 'utf-8'))
+    rmSync(outFile, { force: true })
+  } catch {
+    console.error(`No self-test result file (electron exit code ${code}).`)
+    process.exit(1)
+  }
+
+  for (const c of result.checks) console.log(`${c.ok ? 'PASS' : 'FAIL'}  ${c.label}`)
+  if (result.error) console.error(`\nERROR:\n${result.error}`)
+  const passed = result.checks.filter((c) => c.ok).length
+  console.log(`\n${passed}/${result.checks.length} checks passed`)
+  process.exit(result.ok ? 0 : 1)
+})

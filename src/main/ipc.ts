@@ -1,10 +1,12 @@
 import { app, ipcMain } from 'electron'
-import type { Settings } from '../shared/settings'
+import type { HotkeyMap, Settings } from '../shared/settings'
+import type { HotkeyResult } from '../shared/actions'
 import type { BlockWithTask, NewTaskInput, Task } from '../shared/models'
 import { getSettings, updateSettings } from './settings'
 import { createTask, getRecentTasks } from './db/tasks'
 import { getBlocksForRange } from './db/blocks'
 import { localDayBounds } from './time'
+import { updateHotkeys } from './triggers/hotkeys'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -40,4 +42,11 @@ export const registerIpcHandlers = (): void => {
     const { start, end } = localDayBounds(typeof referenceMs === 'number' ? referenceMs : Date.now())
     return getBlocksForRange(start, end)
   })
+
+  // Validate-before-persist: the new hotkey map is only saved if every key
+  // registers, so a user can't lock themselves out (used by the settings UI).
+  ipcMain.handle(
+    'triggers:set-hotkeys',
+    (_event, map: HotkeyMap): { ok: boolean; results: HotkeyResult[] } => updateHotkeys(map)
+  )
 }

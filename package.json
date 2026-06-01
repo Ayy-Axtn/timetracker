@@ -17,6 +17,8 @@
     "gen:icons": "node scripts/gen-icons.mjs",
     "smoke": "npm run build && node scripts/smoke.mjs",
     "db:selftest": "npm run build && node scripts/db-selftest.mjs",
+    "triggers:selftest": "npm run build && node scripts/triggers-selftest.mjs",
+    "triggers:e2e": "npm run build && node scripts/triggers-e2e.mjs",
     "rebuild": "node scripts/rebuild-native.mjs"
   },
   "dependencies": {
