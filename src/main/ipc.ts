@@ -1,4 +1,5 @@
-import { app, clipboard, ipcMain } from 'electron'
+import { writeFileSync } from 'node:fs'
+import { app, BrowserWindow, dialog, ipcMain } from 'electron'
 import type { HotkeyMap, Settings } from '../shared/settings'
 import type { HotkeyResult } from '../shared/actions'
 import type {
@@ -131,7 +132,24 @@ export const registerIpcHandlers = (): void => {
     return block
   })
 
-  ipcMain.handle('clipboard:write', (_event, text: string): void => {
-    clipboard.writeText(String(text))
-  })
+  // Write the day's CSV to a user-chosen file. TIMETRACKER_EXPORT_PATH lets a
+  // test write to a fixed path instead of opening the (blocking) save dialog.
+  ipcMain.handle(
+    'export:csv',
+    async (_event, content: string, defaultFileName: string): Promise<{ saved: boolean; path?: string }> => {
+      const override = process.env['TIMETRACKER_EXPORT_PATH']
+      if (override) {
+        writeFileSync(override, content, 'utf-8')
+        return { saved: true, path: override }
+      }
+      const options = { defaultPath: defaultFileName, filters: [{ name: 'CSV', extensions: ['csv'] }] }
+      const focused = BrowserWindow.getFocusedWindow()
+      const result = await (focused
+        ? dialog.showSaveDialog(focused, options)
+        : dialog.showSaveDialog(options))
+      if (result.canceled || !result.filePath) return { saved: false }
+      writeFileSync(result.filePath, content, 'utf-8')
+      return { saved: true, path: result.filePath }
+    }
+  )
 }

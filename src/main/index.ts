@@ -106,7 +106,8 @@ if (!gotLock) {
     createTray({
       onPause: () => dispatchAction('pausetask', 'tray'),
       onResume: () => dispatchAction('resumetask', 'tray'),
-      onSettings: () => showSettingsWindow()
+      onSettings: () => showSettingsWindow(),
+      onStatus: () => dispatchAction('status', 'tray')
     })
 
     // The reusable popup window backs every prompt the state machine awaits.

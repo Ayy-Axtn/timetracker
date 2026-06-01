@@ -11,7 +11,7 @@ import {
 } from '../db/blocks'
 import { createTask, getTaskById, updateTask } from '../db/tasks'
 import { localDayBounds } from '../time'
-import { formatDayExport, formatDuration } from '../../shared/format'
+import { formatDayCsv, formatDuration } from '../../shared/format'
 
 // Unit tests for the Today's Log editor operations + formatting, against an
 // in-memory database. Guarded by TIMETRACKER_LOG_SELFTEST.
@@ -59,13 +59,15 @@ const execute = (): void => {
   check('formatDuration 75m → 1h 15m', formatDuration(75 * 60_000) === '1h 15m')
   check('formatDuration 60m → 1h', formatDuration(60 * 60_000) === '1h')
   check('formatDuration 5m → 5m', formatDuration(5 * 60_000) === '5m')
-  check('formatDuration negative → 0m', formatDuration(-1000) === '0m')
+  check('formatDuration negative → 0s', formatDuration(-1000) === '0s')
+  check('formatDuration 45s → 45s', formatDuration(45_000) === '45s')
+  check('formatDuration 90s → 1m', formatDuration(90_000) === '1m')
 
-  // --- day export ---
+  // --- day CSV export ---
   reset()
   {
     const dayMs = new Date(2024, 5, 1, 12).getTime()
-    const task = createTask({ name: 'Login bug', ticketId: 'T-9' }, dayMs)
+    const task = createTask({ name: 'Login, bug', ticketId: 'T-9' }, dayMs)
     createEndedBlock({
       taskId: task.id,
       startTime: new Date(2024, 5, 1, 9, 0).getTime(),
@@ -73,11 +75,11 @@ const execute = (): void => {
       summary: 'traced it'
     })
     const bounds = localDayBounds(dayMs)
-    const text = formatDayExport(getBlocksForRange(bounds.start, bounds.end), { dayMs, now: dayMs })
-    check('day export shows the day total', text.includes('total 1h 15m'))
-    check('day export shows the block line', text.includes('Login bug') && text.includes('[T-9]') && text.includes('traced it'))
-    check('day export shows the duration', text.includes('1h 15m'))
-    check('day export shows a by-task breakdown', text.includes('By task:') && text.includes('Login bug: 1h 15m'))
+    const lines = formatDayCsv(getBlocksForRange(bounds.start, bounds.end), { now: dayMs }).split('\r\n')
+    check('csv header row', lines[0] === 'Date,Start,End,Hours,Task,Ticket,Summary')
+    check('csv hours is a decimal (75m = 1.25)', lines[1].includes(',1.25,'))
+    check('csv has the row fields', lines[1].includes('2024-06-01') && lines[1].includes('T-9') && lines[1].includes('traced it'))
+    check('csv quotes a field containing a comma', lines[1].includes('"Login, bug"'))
   }
 
   // --- back-date / createEndedBlock ---

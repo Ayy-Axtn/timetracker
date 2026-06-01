@@ -11,8 +11,10 @@ const require = createRequire(import.meta.url)
 const electron = require('electron')
 const outFile = join(tmpdir(), `timetracker-log-e2e-${process.pid}.json`)
 const tempDb = join(tmpdir(), `timetracker-log-e2e-${process.pid}.db`)
+const exportPath = join(tmpdir(), `timetracker-log-e2e-${process.pid}.csv`)
 const cleanup = () => {
   for (const ext of ['', '-wal', '-shm']) rmSync(tempDb + ext, { force: true })
+  rmSync(exportPath, { force: true })
 }
 
 cleanup()
@@ -22,7 +24,8 @@ const child = spawn(electron, ['.'], {
     ...process.env,
     TIMETRACKER_LOG_E2E: '1',
     TIMETRACKER_LOG_E2E_OUT: outFile,
-    TIMETRACKER_DB_PATH: tempDb
+    TIMETRACKER_DB_PATH: tempDb,
+    TIMETRACKER_EXPORT_PATH: exportPath
   }
 })
 

@@ -5,7 +5,8 @@ const HOTKEY_ROWS: { label: string; key: keyof HotkeyMap }[] = [
   { label: 'New task', key: 'newTask' },
   { label: 'End task', key: 'endTask' },
   { label: 'Pause task', key: 'pauseTask' },
-  { label: 'Resume task', key: 'resumeTask' }
+  { label: 'Resume task', key: 'resumeTask' },
+  { label: 'Quick view', key: 'status' }
 ]
 
 export function SettingsApp(): React.JSX.Element {

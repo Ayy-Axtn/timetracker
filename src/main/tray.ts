@@ -20,6 +20,7 @@ export interface TrayCallbacks {
   onPause: () => void
   onResume: () => void
   onSettings: () => void
+  onStatus: () => void
 }
 
 /** Tooltip text: the running task and its elapsed time when active. */
@@ -38,11 +39,17 @@ const icons: Record<TrayState, string> = {
 }
 
 let tray: Tray | null = null
-let callbacks: TrayCallbacks = { onPause: () => {}, onResume: () => {}, onSettings: () => {} }
+let callbacks: TrayCallbacks = {
+  onPause: () => {},
+  onResume: () => {},
+  onSettings: () => {},
+  onStatus: () => {}
+}
 let menuState: TrayMenuState = { hasActive: false, hasPaused: false }
 
 const buildMenu = (): Menu =>
   Menu.buildFromTemplate([
+    { label: 'Quick view', click: () => callbacks.onStatus() },
     { label: "Open Today's Log", click: () => showTodaysLogWindow() },
     { type: 'separator' },
     { label: 'Pause Task', enabled: menuState.hasActive, click: () => callbacks.onPause() },

@@ -21,7 +21,7 @@ Local Windows tray app for personal time tracking, triggered by a Stream Deck vi
 
 - **No network listeners. No localhost HTTP server. Ever.** This rules out a full Stream Deck plugin and any IPC-over-socket shortcut.
 - **Standard Windows user only** — no UAC elevation, no service component, no scheduled SYSTEM task, no privileged helper.
-- **Treat incoming protocol URLs as untrusted.** Validate against the known action set (`newtask`/`endtask`/`pausetask`/`resumetask`); ignore anything unrecognised. Never path-construct, `eval`, or build queries from URL contents.
+- **Treat incoming protocol URLs as untrusted.** Validate against the known action set (`newtask`/`endtask`/`pausetask`/`resumetask`/`status`); ignore anything unrecognised. Never path-construct, `eval`, or build queries from URL contents.
 - **Parameterise all SQL** (better-sqlite3 prepared statements). No string-built queries.
 - **No `dangerouslySetInnerHTML` anywhere.** Rely on React's default escaping.
 - **No secrets in the DB** — task names, ticket IDs, free-text notes only.

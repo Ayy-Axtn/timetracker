@@ -1,6 +1,9 @@
 import type { TriggerAction } from '../../shared/actions'
+import type { Block } from '../../shared/models'
+import type { OpenTaskView, StatusPayload } from '../../shared/popup'
 import { getActiveBlock, getPausedBlocks } from '../db/blocks'
 import { getTaskById } from '../db/tasks'
+import { showStatus } from '../popup/popup'
 import { getSettings } from '../settings'
 import { notify } from '../notifications'
 import { formatTrayTooltip, setTrayState, setTrayTooltip, updateTrayMenu } from '../tray'
@@ -57,6 +60,22 @@ const syncState = (): void => {
   notifyBlocksChanged() // keep an open Today's Log window live
 }
 
+// Build the read-only quick-view payload from current state.
+const toView = (block: Block): OpenTaskView => {
+  const task = getTaskById(block.taskId)
+  return {
+    blockId: block.id,
+    taskName: task?.name ?? 'Unknown task',
+    ticketId: task?.ticketId ?? null,
+    state: block.state === 'active' ? 'active' : 'paused',
+    startTime: block.startTime
+  }
+}
+const buildStatus = (): StatusPayload => {
+  const active = getActiveBlock()
+  return { active: active ? toView(active) : null, paused: getPausedBlocks().map(toView) }
+}
+
 const dispatch = (action: TriggerAction): Promise<void> => {
   switch (action) {
     case 'newtask':
@@ -67,6 +86,8 @@ const dispatch = (action: TriggerAction): Promise<void> => {
       return machine.pauseTask()
     case 'resumetask':
       return machine.resumeTask()
+    case 'status':
+      return showStatus(buildStatus())
   }
 }
 

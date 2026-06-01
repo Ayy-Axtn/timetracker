@@ -15,7 +15,7 @@ Target user: a single developer on a Windows workstation with an Elgato Stream D
 - **Database location:** `%APPDATA%\TimeTracker\timer.db`
 - **Settings file:** `%APPDATA%\TimeTracker\settings.json`
 - **IPC:** Electron's native `ipcMain`/`ipcRenderer` between main and renderer. No HTTP server, no localhost port, no network listeners of any kind.
-- **Stream Deck integration:** Custom protocol handler (`timetracker://`) registered via `setAsDefaultProtocolClient`. Stream Deck buttons use the "System: Open" action to fire protocol URLs. Global hotkeys (F13–F16) retained as an optional fallback trigger.
+- **Stream Deck integration:** Custom protocol handler (`timetracker://`) registered via `setAsDefaultProtocolClient`. Stream Deck buttons use the "System: Open" action to fire protocol URLs. Global hotkeys (F13–F17) retained as an optional fallback trigger.
 - **Privilege level:** Runs as standard Windows user. No UAC elevation, no Windows service component, no privileged helper.
 
 ### Trigger model
@@ -28,8 +28,9 @@ Target user: a single developer on a Windows workstation with an Elgato Stream D
 | `timetracker://endtask` | End Task |
 | `timetracker://pausetask` | Pause Task |
 | `timetracker://resumetask` | Resume Task |
+| `timetracker://status` | Quick View (read-only popup of active + paused tasks) |
 
-**Fallback: global hotkeys.** F13–F16 registered via `globalShortcut`, mappable in settings, for users who prefer keys or whose protocol activation misbehaves. Registration success is checked per-key; any failure is surfaced (see Trigger feedback below) rather than failing silently.
+**Fallback: global hotkeys.** F13–F17 registered via `globalShortcut`, mappable in settings, for users who prefer keys or whose protocol activation misbehaves. Registration success is checked per-key; any failure is surfaced (see Trigger feedback below) rather than failing silently.
 
 | Key | Action |
 |-----|--------|
@@ -37,6 +38,7 @@ Target user: a single developer on a Windows workstation with an Elgato Stream D
 | F14 | End Task |
 | F15 | Pause Task |
 | F16 | Resume Task |
+| F17 | Quick View |
 
 **Trigger feedback.** State-change toasts (see Settings) double as the trigger-health surface: on launch, any hotkey that failed to register raises a toast, and the tray icon reflects an error state. Protocol activation that can't be parsed produces a toast rather than a silent drop.
 
@@ -138,7 +140,7 @@ Modes:
   - Merge: combine two adjacent blocks (same task) into one
   - Split: split a block at a chosen timestamp
   - Delete: remove a block (hard delete)
-- Export day: copy the whole day's log to the clipboard as a readable plain-text summary (one line per block — time range, duration, task, ticket, notes — plus a per-task breakdown and total). Used as reference for writing Autotask time-entry descriptions by hand; the app is a timer + notes pad, so per-block Autotask-formatted copy was dropped (it only partially filled the time-entry template).
+- Export day: save the day's blocks as a CSV file (columns Date, Start, End, Hours, Task, Ticket, Summary; Hours as a decimal). Used as reference / import for writing Autotask time-entry descriptions by hand; the app is a timer + notes pad, so per-block Autotask-formatted copy was dropped (it only partially filled the time-entry template).
 - Daily totals at the bottom (total tracked, breakdown by task)
 
 ### Tray icon
@@ -203,7 +205,8 @@ Stored in `%APPDATA%\TimeTracker\settings.json`:
       "newTask": "F13",
       "endTask": "F14",
       "pauseTask": "F15",
-      "resumeTask": "F16"
+      "resumeTask": "F16",
+      "status": "F17"
     }
   },
   "popupPosition": "cursor",
@@ -276,4 +279,4 @@ Stored in `%APPDATA%\TimeTracker\settings.json`:
 | Storage | better-sqlite3 (main process only) |
 | Build | electron-builder |
 | Packaging | NSIS .exe, per-user |
-| Stream Deck trigger | Custom protocol `timetracker://` (primary), global hotkeys F13–F16 (fallback) |
+| Stream Deck trigger | Custom protocol `timetracker://` (primary), global hotkeys F13–F17 (fallback) |

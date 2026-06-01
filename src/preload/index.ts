@@ -43,7 +43,8 @@ const api = {
     ipcRenderer.invoke('blocks:split', id, atMs),
   backdateBlock: (input: BackdateInput): Promise<Block> =>
     ipcRenderer.invoke('blocks:backdate', input),
-  copyToClipboard: (text: string): Promise<void> => ipcRenderer.invoke('clipboard:write', text),
+  exportCsv: (content: string, defaultFileName: string): Promise<{ saved: boolean; path?: string }> =>
+    ipcRenderer.invoke('export:csv', content, defaultFileName),
 
   // Fires when block data changes (a transition or an edit) so the Today's Log
   // window can refetch the day it is viewing. Returns an unsubscribe function.

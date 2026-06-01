@@ -1,6 +1,6 @@
 import { join } from 'node:path'
 import { BrowserWindow, ipcMain, screen } from 'electron'
-import type { PopupMode, PopupPayload } from '../../shared/popup'
+import type { PopupMode, PopupPayload, StatusPayload } from '../../shared/popup'
 import type { PopupPosition } from '../../shared/settings'
 import { getSettings } from '../settings'
 
@@ -51,7 +51,8 @@ const MODE_HEIGHT: Record<PopupMode, number> = {
   pickOpen: 360,
   pickPaused: 360,
   endSummary: 232,
-  crashRecovery: 200
+  crashRecovery: 200,
+  status: 280
 }
 
 let win: BrowserWindow | null = null
@@ -168,6 +169,10 @@ export const prompt = async <T>(mode: PopupMode, payload: PopupPayload): Promise
   win.webContents.send('popup:show', { requestId, mode, payload })
   return result
 }
+
+/** Show the read-only quick-view popup (its result is ignored). */
+export const showStatus = (payload: StatusPayload): Promise<void> =>
+  prompt('status', payload).then(() => undefined)
 
 export const destroyPopup = (): void => {
   settleAll(null)

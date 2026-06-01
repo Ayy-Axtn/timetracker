@@ -7,6 +7,7 @@ export interface HotkeyMap {
   endTask: string
   pauseTask: string
   resumeTask: string
+  status: string
 }
 
 export interface TriggerSettings {
@@ -35,7 +36,8 @@ export const DEFAULT_SETTINGS: Settings = {
       newTask: 'F13',
       endTask: 'F14',
       pauseTask: 'F15',
-      resumeTask: 'F16'
+      resumeTask: 'F16',
+      status: 'F17'
     }
   },
   popupPosition: 'cursor',

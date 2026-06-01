@@ -1,7 +1,7 @@
 import { writeFileSync } from 'node:fs'
 import type { NewTaskInput } from '../../shared/models'
 import type { OpenTaskView } from '../../shared/popup'
-import { getPopupWindowForTest } from './popup'
+import { getPopupWindowForTest, showStatus } from './popup'
 import { popupPrompter } from './prompter'
 
 // Drives the real popup DOM via executeJavaScript to verify the keyboard-first
@@ -174,5 +174,18 @@ const execute = async (): Promise<void> => {
     await waitForMode('resolveActive')
     await clickTestid('popup-close')
     check('close button cancels', (await p) === null)
+  }
+
+  // Status quick view: shows the active task, dismisses on Close.
+  {
+    const p = showStatus({
+      active: { blockId: 1, taskName: 'Alpha', ticketId: 'A-1', state: 'active', startTime: 0 },
+      paused: [{ blockId: 2, taskName: 'Beta', ticketId: null, state: 'paused', startTime: 0 }]
+    })
+    if (!(await waitForMode('status'))) throw new Error('status never rendered')
+    check('status shows the active task', await waitFor(`${sel('status-active')}.textContent.includes('Alpha')`))
+    await clickTestid('status-close')
+    check('status closes on Close', await waitFor(`!document.body.dataset.popupMode`))
+    await p
   }
 }

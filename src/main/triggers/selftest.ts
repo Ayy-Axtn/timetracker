@@ -45,6 +45,7 @@ const execute = (): boolean => {
   check('case-insensitive', parseProtocolUrl('timetracker://NEWTASK') === 'newtask')
   check('opaque form (no //)', parseProtocolUrl('timetracker:pausetask') === 'pausetask')
   check('resolves resumetask', parseProtocolUrl('timetracker://resumetask') === 'resumetask')
+  check('resolves status', parseProtocolUrl('timetracker://status') === 'status')
   check('rejects unknown action', parseProtocolUrl('timetracker://bogus') === null)
   check('rejects wrong scheme', parseProtocolUrl('http://newtask') === null)
   check('rejects javascript: scheme', parseProtocolUrl('javascript:alert(1)') === null)

@@ -1,5 +1,4 @@
-import { writeFileSync } from 'node:fs'
-import { clipboard } from 'electron'
+import { readFileSync, writeFileSync } from 'node:fs'
 import { createEndedBlock, getBlockById, getBlocksForRange } from '../db/blocks'
 import { createTask } from '../db/tasks'
 import { localDayBounds } from '../time'
@@ -156,14 +155,20 @@ const execute = async (): Promise<void> => {
   notifyBlocksChanged()
   check('open log refetches on a reported change', await waitFor(`document.querySelectorAll('[data-testid="log-row"]').length === 3`))
 
-  // Export day copies a readable summary of the whole day to the clipboard.
-  clipboard.writeText('')
+  // Export day writes a CSV (TIMETRACKER_EXPORT_PATH points it at a temp file
+  // instead of opening the save dialog).
+  const exportPath = process.env['TIMETRACKER_EXPORT_PATH']
   await clickTestid('export-day')
   check(
-    'export day copies the day summary to the clipboard',
-    await waitUntil(() => {
-      const text = clipboard.readText()
-      return text.includes('Alpha') && text.includes('total ') && text.includes('By task:')
-    })
+    'export day writes the day CSV',
+    !!exportPath &&
+      (await waitUntil(() => {
+        try {
+          const csv = readFileSync(exportPath, 'utf-8')
+          return csv.startsWith('Date,Start,End,Hours') && csv.includes('Alpha')
+        } catch {
+          return false
+        }
+      }))
   )
 }

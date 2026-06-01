@@ -2,52 +2,56 @@ import type { BlockWithTask } from './models'
 
 // Formatting shared by the renderer and the tests so they agree exactly.
 
-/** "1h 15m", "2h", "5m", "0m". Rounds to the nearest minute; never negative. */
+/**
+ * Adaptive duration: seconds under a minute ("45s"), whole minutes under an
+ * hour ("15m"), hours and minutes beyond ("1h 15m" / "2h"). Never negative.
+ * Truncates (counts up) rather than rounding, so a live timer reads naturally.
+ */
 export const formatDuration = (ms: number): string => {
-  const totalMinutes = Math.max(0, Math.round(ms / 60_000))
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000))
+  if (totalSeconds < 60) return `${totalSeconds}s`
+  const totalMinutes = Math.floor(totalSeconds / 60)
+  if (totalMinutes < 60) return `${totalMinutes}m`
   const hours = Math.floor(totalMinutes / 60)
   const minutes = totalMinutes % 60
-  if (hours && minutes) return `${hours}h ${minutes}m`
-  if (hours) return `${hours}h`
-  return `${minutes}m`
+  return minutes ? `${hours}h ${minutes}m` : `${hours}h`
 }
 
 /** Local clock time, e.g. "09:05" (Australian English, 24-hour). */
 export const formatClock = (ts: number): string =>
   new Date(ts).toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit', hour12: false })
 
+/** Local date as YYYY-MM-DD (sorts cleanly in spreadsheets). */
+export const isoDate = (ts: number): string => {
+  const d = new Date(ts)
+  const pad = (n: number): string => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}
+
+// Quote a CSV field only when it contains a comma, quote, or newline.
+const csvField = (value: string): string => (/[",\n\r]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value)
+
 /**
- * A readable plain-text summary of a day's blocks, for copying out as notes /
- * reference while writing time entries by hand. One line per block plus a
- * per-task breakdown and the day total. Durations use `now` for any open block.
+ * A day's blocks as CSV (one row per block) for export to a spreadsheet or
+ * time-entry tool. Hours is a decimal (e.g. 1.25) for billing maths; an open
+ * block's End is blank and its Hours counts up to `now`. CRLF line endings for
+ * Excel friendliness.
  */
-export const formatDayExport = (
-  blocks: BlockWithTask[],
-  opts: { dayMs: number; now: number }
-): string => {
-  const date = new Date(opts.dayMs).toLocaleDateString('en-AU', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric'
-  })
-  const durationOf = (b: BlockWithTask): number => (b.endTime ?? opts.now) - b.startTime
-  const total = blocks.reduce((sum, b) => sum + durationOf(b), 0)
-
+export const formatDayCsv = (blocks: BlockWithTask[], opts: { now: number }): string => {
+  const header = ['Date', 'Start', 'End', 'Hours', 'Task', 'Ticket', 'Summary']
   const rows = blocks.map((b) => {
-    const end = b.endTime ? formatClock(b.endTime) : 'now'
-    const ticket = b.ticketId ? ` [${b.ticketId}]` : ''
-    const note = b.summary ? ` — ${b.summary}` : ''
-    return `${formatClock(b.startTime)}–${end}  ${formatDuration(durationOf(b))}  ${b.taskName}${ticket}${note}`
+    const hours = ((b.endTime ?? opts.now) - b.startTime) / 3_600_000
+    return [
+      isoDate(b.startTime),
+      formatClock(b.startTime),
+      b.endTime ? formatClock(b.endTime) : '',
+      hours.toFixed(2),
+      b.taskName,
+      b.ticketId ?? '',
+      b.summary ?? ''
+    ]
+      .map(csvField)
+      .join(',')
   })
-
-  const byTask = new Map<string, number>()
-  for (const b of blocks) byTask.set(b.taskName, (byTask.get(b.taskName) ?? 0) + durationOf(b))
-  const breakdown = [...byTask.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .map(([task, ms]) => `  ${task}: ${formatDuration(ms)}`)
-
-  const parts = [`${date} — total ${formatDuration(total)}`, '', rows.length ? rows.join('\n') : '(no blocks)']
-  if (breakdown.length) parts.push('', 'By task:', ...breakdown)
-  return parts.join('\n')
+  return [header.join(','), ...rows].join('\r\n')
 }

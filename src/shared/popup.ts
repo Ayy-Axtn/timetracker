@@ -11,6 +11,7 @@ export type PopupMode =
   | 'endSummary'
   | 'pickPaused'
   | 'crashRecovery'
+  | 'status'
 
 /** A single open (active or paused) task, as shown in a picker. */
 export interface OpenTaskView {
@@ -43,12 +44,19 @@ export interface CrashRecoveryPayload {
   lastAlive: number | null
 }
 
+/** Read-only quick view of the current active + paused tasks. */
+export interface StatusPayload {
+  active: OpenTaskView | null
+  paused: OpenTaskView[]
+}
+
 export type PopupPayload =
   | NewTaskPayload
   | ResolveActivePayload
   | PickPayload
   | EndSummaryPayload
   | CrashRecoveryPayload
+  | StatusPayload
 
 // Per-mode results (renderer → main); null always means cancelled.
 export type PopupResult =

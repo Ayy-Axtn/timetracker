@@ -21,7 +21,8 @@ const merge = (raw: unknown): Settings => {
         newTask: h.newTask ?? DEFAULT_SETTINGS.triggers.hotkeys.newTask,
         endTask: h.endTask ?? DEFAULT_SETTINGS.triggers.hotkeys.endTask,
         pauseTask: h.pauseTask ?? DEFAULT_SETTINGS.triggers.hotkeys.pauseTask,
-        resumeTask: h.resumeTask ?? DEFAULT_SETTINGS.triggers.hotkeys.resumeTask
+        resumeTask: h.resumeTask ?? DEFAULT_SETTINGS.triggers.hotkeys.resumeTask,
+        status: h.status ?? DEFAULT_SETTINGS.triggers.hotkeys.status
       }
     },
     popupPosition: r.popupPosition ?? DEFAULT_SETTINGS.popupPosition,

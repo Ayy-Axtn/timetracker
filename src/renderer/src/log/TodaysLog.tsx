@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { BackdateInput, BlockWithTask } from '../../../shared/models'
-import { formatClock, formatDayExport, formatDuration } from '../../../shared/format'
+import { formatClock, formatDayCsv, formatDuration, isoDate } from '../../../shared/format'
 import { EditableText } from './EditableText'
 import { BackdateForm } from './BackdateForm'
 
@@ -8,11 +8,6 @@ const noonOf = (ms: number): number => {
   const d = new Date(ms)
   d.setHours(12, 0, 0, 0)
   return d.getTime()
-}
-const dayInputValue = (ms: number): string => {
-  const d = new Date(ms)
-  const pad = (n: number): string => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 }
 const parseDayInput = (value: string): number => {
   const [y, m, d] = value.split('-').map(Number)
@@ -33,7 +28,7 @@ export function TodaysLog(): React.JSX.Element {
   const [showBackdate, setShowBackdate] = useState(false)
   const [splittingId, setSplittingId] = useState<number | null>(null)
   const [splitTime, setSplitTime] = useState('')
-  const [dayCopied, setDayCopied] = useState(false)
+  const [exported, setExported] = useState(false)
 
   const load = useCallback(async (): Promise<void> => {
     setBlocks(await window.api.getBlocksForDay(dayMs))
@@ -64,12 +59,14 @@ export function TodaysLog(): React.JSX.Element {
     return { total, byTask: [...byTask.entries()].sort((a, b) => b[1] - a[1]) }
   }, [blocks, now])
 
-  const isToday = dayInputValue(dayMs) === dayInputValue(Date.now())
+  const isToday = isoDate(dayMs) === isoDate(Date.now())
 
   const exportDay = async (): Promise<void> => {
-    await window.api.copyToClipboard(formatDayExport(blocks, { dayMs, now }))
-    setDayCopied(true)
-    setTimeout(() => setDayCopied(false), 1500)
+    const result = await window.api.exportCsv(formatDayCsv(blocks, { now }), `timetracker-${isoDate(dayMs)}.csv`)
+    if (result.saved) {
+      setExported(true)
+      setTimeout(() => setExported(false), 1500)
+    }
   }
 
   const confirmSplit = async (block: BlockWithTask): Promise<void> => {
@@ -98,7 +95,7 @@ export function TodaysLog(): React.JSX.Element {
             type="date"
             className="day-input"
             data-testid="day-input"
-            value={dayInputValue(dayMs)}
+            value={isoDate(dayMs)}
             onChange={(e) => e.target.value && setDayMs(parseDayInput(e.target.value))}
           />
           <button className="btn" onClick={() => setDayMs((d) => d + 86_400_000)} aria-label="Next day">
@@ -112,7 +109,7 @@ export function TodaysLog(): React.JSX.Element {
         </div>
         <div className="header-actions">
           <button className="btn" data-testid="export-day" onClick={exportDay}>
-            {dayCopied ? 'Copied!' : 'Export day'}
+            {exported ? 'Exported!' : 'Export day (CSV)'}
           </button>
           <button className="btn" data-testid="add-block" onClick={() => setShowBackdate((s) => !s)}>
             + Add block

@@ -6,13 +6,15 @@ import type {
   PickPayload,
   PopupRequest,
   PopupResult,
-  ResolveActivePayload
+  ResolveActivePayload,
+  StatusPayload
 } from '../../../shared/popup'
 import { NewTaskForm } from './NewTaskForm'
 import { ResolveActivePrompt } from './ResolveActivePrompt'
 import { PickerList } from './PickerList'
 import { EndSummary } from './EndSummary'
 import { CrashRecovery } from './CrashRecovery'
+import { StatusView } from './StatusView'
 
 // Hosts the reusable popup window. Listens for the mode main wants to show,
 // renders the matching component, and ships the result back. Esc cancels any
@@ -86,5 +88,7 @@ function Body({
       return <EndSummary payload={request.payload as EndSummaryPayload} onSubmit={respond} />
     case 'crashRecovery':
       return <CrashRecovery payload={request.payload as CrashRecoveryPayload} onSubmit={respond} />
+    case 'status':
+      return <StatusView payload={request.payload as StatusPayload} onClose={() => respond(null)} />
   }
 }
