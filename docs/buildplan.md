@@ -11,12 +11,12 @@
 
 Foundation for everything else — start here.
 
-- [ ] Electron + TypeScript + React project scaffold builds and runs an empty window
-- [ ] Main process bootstraps; renderer loads with `contextIsolation: true`, `nodeIntegration: false`, renderer `sandbox: true`
-- [ ] Preload script wired with `contextBridge`, exposing a minimal (placeholder) IPC surface
-- [ ] `requestSingleInstanceLock()` enabled; second launch focuses first instance and exits
-- [ ] Tray icon appears with right-click menu (Open Today's Log, Pause, Resume, Settings, Quit) and left-click handler
-- [ ] Settings load/save against `%APPDATA%\TimeTracker\settings.json` with defaults from the brief
+- [x] Electron + TypeScript + React project scaffold builds and runs an empty window
+- [x] Main process bootstraps; renderer loads with `contextIsolation: true`, `nodeIntegration: false`, renderer `sandbox: true`
+- [x] Preload script wired with `contextBridge`, exposing a minimal (placeholder) IPC surface
+- [x] `requestSingleInstanceLock()` enabled; second launch focuses first instance and exits
+- [x] Tray icon appears with right-click menu (Open Today's Log, Pause, Resume, Settings, Quit) and left-click handler
+- [x] Settings load/save against `%APPDATA%\TimeTracker\settings.json` with defaults from the brief
 
 **Done when:** the app launches to a tray icon, enforces single-instance, and reads/writes settings.json.
 

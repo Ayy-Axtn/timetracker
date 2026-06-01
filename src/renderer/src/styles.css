@@ -1,0 +1,43 @@
+:root {
+  color-scheme: light dark;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #1e1e1e;
+  color: #e8e8e8;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 2rem;
+  min-height: 100vh;
+}
+
+.app h1 {
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #9ad29a;
+}
+
+.muted {
+  color: #9e9e9e;
+}
+
+.version {
+  margin-top: auto;
+  color: #6f6f6f;
+  font-size: 0.85rem;
+}
