@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { EndSummaryPayload } from '../../../shared/popup'
+import { AutoTextarea } from './AutoTextarea'
 
 // Optional closing note when ending a task. Enter submits (empty is allowed);
 // Shift+Enter inserts a newline.
@@ -22,14 +23,14 @@ export function EndSummary({
   return (
     <div className="mode">
       <h2 className="mode-title">End {payload.taskName}</h2>
-      <textarea
+      <AutoTextarea
         className="field"
         data-testid="summary-input"
         placeholder="Closing note (optional)"
         autoFocus
         rows={3}
         value={summary}
-        onChange={(e) => setSummary(e.target.value)}
+        onChange={setSummary}
         onKeyDown={onKeyDown}
       />
       <div className="buttons">

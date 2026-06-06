@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type {
   CrashRecoveryPayload,
   EndSummaryPayload,
@@ -21,12 +21,37 @@ import { StatusView } from './StatusView'
 // mode; the close button does the same.
 export function PopupApp(): React.JSX.Element | null {
   const [request, setRequest] = useState<PopupRequest | null>(null)
+  const popupRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const unsubscribe = window.api.popup.onShow(setRequest)
     window.api.popup.ready()
     return unsubscribe
   }, [])
+
+  // Size the popup window to its content (so there's no dead space and it grows
+  // with the description field). Measures the .mode content height plus the
+  // card's padding/border and asks main to fit the window to it.
+  useEffect(() => {
+    const popup = popupRef.current
+    if (!popup || !request) return
+    const report = (): void => {
+      const mode = popup.querySelector('.mode')
+      if (!mode) return
+      const cs = getComputedStyle(popup)
+      const chrome =
+        parseFloat(cs.paddingTop) +
+        parseFloat(cs.paddingBottom) +
+        parseFloat(cs.borderTopWidth) +
+        parseFloat(cs.borderBottomWidth)
+      window.api.popup.resize(Math.ceil(mode.getBoundingClientRect().height + chrome))
+    }
+    const mode = popup.querySelector('.mode')
+    const observer = new ResizeObserver(report)
+    if (mode) observer.observe(mode)
+    report()
+    return () => observer.disconnect()
+  }, [request])
 
   // Expose the active mode on <body> so the E2E driver can wait for a render.
   useEffect(() => {
@@ -60,7 +85,7 @@ export function PopupApp(): React.JSX.Element | null {
   if (!request) return null
 
   return (
-    <div className="popup">
+    <div className="popup" ref={popupRef}>
       <button className="popup-close" data-testid="popup-close" aria-label="Close" onClick={cancel}>
         ×
       </button>

@@ -59,6 +59,10 @@ let win: BrowserWindow | null = null
 let readyPromise: Promise<void> | null = null
 let allowClose = false
 let nextId = 1
+// The content height we last applied (reset per prompt). Compared against the
+// renderer's reports — not getBounds, which carries a frameless-border offset —
+// so a settled popup stops resizing instead of churning setBounds calls.
+let lastResizeHeight = 0
 const pending = new Map<number, (result: unknown) => void>()
 
 const loadPopup = (window: BrowserWindow): void => {
@@ -78,6 +82,7 @@ const settleAll = (result: unknown): void => {
 export const initPopup = (): void => {
   ipcMain.removeAllListeners('popup:ready')
   ipcMain.removeAllListeners('popup:result')
+  ipcMain.removeAllListeners('popup:resize')
 
   win = new BrowserWindow({
     width: WIDTH,
@@ -122,6 +127,26 @@ export const initPopup = (): void => {
     resolve(payload.result)
   })
 
+  // The renderer reports the total height its content needs; fit the window to
+  // it (no dead space, and it grows with the description field), keeping it
+  // on-screen. Input is treated as untrusted and clamped.
+  ipcMain.on('popup:resize', (_event, desired: unknown) => {
+    if (!win || win.isDestroyed() || !win.isVisible()) return
+    if (typeof desired !== 'number' || !Number.isFinite(desired)) return
+    // Fit the window to the content height the renderer reports (this window is
+    // frameless, so the window height is effectively the content height). Always
+    // restore the fixed WIDTH — never echo getBounds().width, which can drift
+    // down a fraction per call under fractional DPI and snowball — and ignore
+    // sub-pixel height changes so repeated reports can't oscillate.
+    const bounds = win.getBounds()
+    const { workArea } = screen.getDisplayNearestPoint({ x: bounds.x, y: bounds.y })
+    const height = Math.round(Math.min(Math.max(desired, 120), workArea.height))
+    if (Math.abs(height - lastResizeHeight) <= 1) return
+    lastResizeHeight = height
+    const y = Math.max(workArea.y, Math.min(bounds.y, workArea.y + workArea.height - height))
+    win.setBounds({ x: bounds.x, y, width: WIDTH, height })
+  })
+
   loadPopup(win)
 }
 
@@ -162,6 +187,7 @@ export const prompt = async <T>(mode: PopupMode, payload: PopupPayload): Promise
     pending.set(requestId, (r) => resolve((r ?? null) as T | null))
   })
 
+  lastResizeHeight = 0 // forget the previous mode's fitted height
   sizeAndPosition(win, mode)
   win.show()
   win.focus()

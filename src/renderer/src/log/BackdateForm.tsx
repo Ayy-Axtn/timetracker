@@ -59,7 +59,7 @@ export function BackdateForm({
         />
         <input
           className="field"
-          placeholder="Ticket ID"
+          placeholder="Reference"
           value={ticketId}
           onChange={(e) => setTicketId(e.target.value)}
         />

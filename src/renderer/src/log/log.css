@@ -63,7 +63,7 @@
   font-size: 0.85rem;
 }
 .col-time {
-  width: 56px;
+  width: 72px;
 }
 .col-dur {
   width: 94px;
@@ -131,6 +131,11 @@
   min-width: 1.5rem;
   min-height: 1.1rem;
 }
+/* Notes/summary keep their line breaks (and wrap long lines) in the log. */
+.cell-text.multiline {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
 .cell-placeholder {
   color: #6f6f6f;
 }
@@ -143,6 +148,19 @@
   font: inherit;
   font-size: 0.85rem;
   padding: 0.15rem 0.3rem;
+}
+.cell-input.time {
+  padding: 0.15rem 0.2rem;
+  color-scheme: dark;
+}
+textarea.cell-input.multiline {
+  resize: vertical;
+  line-height: 1.3;
+  white-space: pre-wrap;
+}
+/* Drop the clock picker icon so the input fits the narrow time column. */
+.cell-input.time::-webkit-calendar-picker-indicator {
+  display: none;
 }
 
 .actions {

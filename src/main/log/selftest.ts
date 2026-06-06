@@ -76,7 +76,7 @@ const execute = (): void => {
     })
     const bounds = localDayBounds(dayMs)
     const lines = formatDayCsv(getBlocksForRange(bounds.start, bounds.end), { now: dayMs }).split('\r\n')
-    check('csv header row', lines[0] === 'Date,Start,End,Hours,Task,Ticket,Summary')
+    check('csv header row', lines[0] === 'Date,Start,End,Hours,Task,Reference,Summary')
     check('csv hours is a decimal (75m = 1.25)', lines[1].includes(',1.25,'))
     check('csv has the row fields', lines[1].includes('2024-06-01') && lines[1].includes('T-9') && lines[1].includes('traced it'))
     check('csv quotes a field containing a comma', lines[1].includes('"Login, bug"'))

@@ -15,7 +15,9 @@
 
 .popup {
   position: relative;
-  height: 100vh;
+  /* min-height (not height) so the card fills the window, but the window is
+     itself sized to this content by the renderer — no dead space below. */
+  min-height: 100vh;
   padding: 1rem;
   background: #232323;
   color: #e8e8e8;
@@ -48,7 +50,6 @@
   display: flex;
   flex-direction: column;
   gap: 0.55rem;
-  height: 100%;
 }
 
 .mode-title {
@@ -79,6 +80,12 @@
   outline: none;
   border-color: #4f8a4f;
 }
+/* Auto-growing description fields start ~2 lines tall and grow with the text. */
+textarea.field {
+  min-height: 3.4rem;
+  line-height: 1.35;
+  overflow-y: hidden;
+}
 
 .recent,
 .picker {
@@ -99,6 +106,10 @@
 .recent {
   max-height: 5.5rem;
   flex: 0 1 auto;
+}
+
+.picker {
+  max-height: 17rem;
 }
 
 .recent-item,

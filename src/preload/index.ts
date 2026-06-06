@@ -22,6 +22,8 @@ const api = {
   getSettings: (): Promise<Settings> => ipcRenderer.invoke('settings:get'),
   updateSettings: (patch: Partial<Settings>): Promise<Settings> =>
     ipcRenderer.invoke('settings:update', patch),
+  // Open the settings window (used by the Today's Log header button).
+  openSettings: (): Promise<void> => ipcRenderer.invoke('windows:open-settings'),
 
   createTask: (input: NewTaskInput): Promise<Task> => ipcRenderer.invoke('tasks:create', input),
   getRecentTasks: (windowDays?: number): Promise<Task[]> =>
@@ -68,7 +70,10 @@ const api = {
       return () => ipcRenderer.removeListener('popup:show', handler)
     },
     respond: (requestId: number, result: PopupResult | null): void =>
-      ipcRenderer.send('popup:result', { requestId, result })
+      ipcRenderer.send('popup:result', { requestId, result }),
+    // Ask main to grow the popup window by `grownByPx` (the description field's
+    // growth past its initial height); main clamps to the screen.
+    resize: (grownByPx: number): void => ipcRenderer.send('popup:resize', grownByPx)
   }
 }
 

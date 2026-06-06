@@ -98,6 +98,49 @@ const execute = async (): Promise<void> => {
     check('newTask: typed name + Enter submits', !!r && r.name === 'My Task' && r.ticketId === null)
   }
 
+  // New Task: Enter from the notes/description field also starts the task
+  // (regression — Enter there previously did nothing).
+  {
+    const p = popupPrompter.newTaskDetails([])
+    if (!(await waitForMode('newTask'))) throw new Error('newTask never rendered')
+    await setValue('newtask-name', 'Noted Task')
+    await setValue('newtask-notes', 'some context')
+    await keydown('newtask-notes', 'Enter')
+    const r = (await p) as NewTaskInput | null
+    check('newTask: Enter from notes submits', !!r && r.name === 'Noted Task' && r.notes === 'some context')
+  }
+
+  // New Task: the window shrinks to fit its (short) content — no dead gap — and
+  // grows again as the description field gains lines.
+  {
+    const p = popupPrompter.newTaskDetails([])
+    if (!(await waitForMode('newTask'))) throw new Error('newTask never rendered')
+    const popupWin = getPopupWindowForTest()
+    // Wait for the content-driven resize to shrink the window well below the
+    // fixed 392px initial height (which had the dead gap) to fit short content.
+    let before = 0
+    for (let i = 0; i < 60; i++) {
+      before = popupWin ? popupWin.getBounds().height : 0
+      if (before > 0 && before < 340) break
+      await delay(50)
+    }
+    check('newTask: window fits its content (no dead space)', before > 0 && before < 340)
+    await setValue('newtask-notes', 'l1\nl2\nl3\nl4\nl5\nl6')
+    let grew = false
+    for (let i = 0; i < 60 && !grew; i++) {
+      if (popupWin && popupWin.getBounds().height > before) grew = true
+      else await delay(50)
+    }
+    check('newTask: a multi-line description grows the popup window', grew)
+    // Resizing must never disturb the fixed popup width (regression guard for a
+    // feedback loop that starved the width down to a sliver). The window stays
+    // near its 420px width — a static frameless-border offset aside.
+    const w = popupWin ? popupWin.getBounds().width : 0
+    check('newTask: popup keeps its fixed width through resizes', w > 360)
+    await keydown('newtask-notes', 'Escape')
+    await p
+  }
+
   // New Task: ArrowDown to highlight the recent task, Enter to pick it.
   {
     const p = popupPrompter.newTaskDetails(RECENT)

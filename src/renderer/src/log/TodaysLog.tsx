@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { BackdateInput, BlockWithTask } from '../../../shared/models'
-import { formatClock, formatDayCsv, formatDuration, isoDate } from '../../../shared/format'
+import { formatDayCsv, formatDuration, isoDate } from '../../../shared/format'
 import { EditableText } from './EditableText'
+import { EditableTime } from './EditableTime'
 import { BackdateForm } from './BackdateForm'
 
 const noonOf = (ms: number): number => {
@@ -29,6 +30,7 @@ export function TodaysLog(): React.JSX.Element {
   const [splittingId, setSplittingId] = useState<number | null>(null)
   const [splitTime, setSplitTime] = useState('')
   const [exported, setExported] = useState(false)
+  const [editError, setEditError] = useState('')
 
   const load = useCallback(async (): Promise<void> => {
     setBlocks(await window.api.getBlocksForDay(dayMs))
@@ -84,6 +86,21 @@ export function TodaysLog(): React.JSX.Element {
     await load()
   }
 
+  // Edit a block's start or end time. The "ends after it starts" invariant is
+  // enforced here (immediate feedback) and again in the main process.
+  const editTime = (block: BlockWithTask, field: 'startTime' | 'endTime', ms: number): void => {
+    if (field === 'startTime' && block.endTime !== null && ms >= block.endTime) {
+      setEditError('Start must be before end.')
+      return
+    }
+    if (field === 'endTime' && ms <= block.startTime) {
+      setEditError('End must be after start.')
+      return
+    }
+    setEditError('')
+    void window.api.updateBlock(block.id, { [field]: ms }).then(load)
+  }
+
   return (
     <main className="log">
       <header className="log-header">
@@ -114,11 +131,20 @@ export function TodaysLog(): React.JSX.Element {
           <button className="btn" data-testid="add-block" onClick={() => setShowBackdate((s) => !s)}>
             + Add block
           </button>
+          <button className="btn" data-testid="open-settings" onClick={() => void window.api.openSettings()}>
+            Settings…
+          </button>
         </div>
       </header>
 
       {showBackdate && (
         <BackdateForm dayMs={dayMs} onSubmit={onBackdate} onCancel={() => setShowBackdate(false)} />
+      )}
+
+      {editError && (
+        <div className="backdate-error" data-testid="edit-error">
+          {editError}
+        </div>
       )}
 
       <div className="log-table-scroll">
@@ -139,7 +165,7 @@ export function TodaysLog(): React.JSX.Element {
             <th>End</th>
             <th>Duration</th>
             <th>Task</th>
-            <th>Ticket</th>
+            <th>Reference</th>
             <th>Notes</th>
             <th>Summary</th>
             <th aria-label="Actions" />
@@ -152,8 +178,24 @@ export function TodaysLog(): React.JSX.Element {
               !!prev && prev.taskId === block.taskId && prev.state === 'ended' && block.state === 'ended'
             return (
               <tr key={block.id} data-testid="log-row" className={`row ${block.state}`}>
-                <td className="mono">{formatClock(block.startTime)}</td>
-                <td className="mono">{block.endTime ? formatClock(block.endTime) : '—'}</td>
+                <td>
+                  <EditableTime
+                    valueMs={block.startTime}
+                    testid={`start-${block.id}`}
+                    onCommit={(ms) => editTime(block, 'startTime', ms)}
+                  />
+                </td>
+                <td>
+                  {block.endTime !== null ? (
+                    <EditableTime
+                      valueMs={block.endTime}
+                      testid={`end-${block.id}`}
+                      onCommit={(ms) => editTime(block, 'endTime', ms)}
+                    />
+                  ) : (
+                    <span className="mono">—</span>
+                  )}
+                </td>
                 <td className="mono">
                   {formatDuration(blockDuration(block, now))}
                   <span className={`state-dot ${block.state}`} title={block.state} />
@@ -179,6 +221,7 @@ export function TodaysLog(): React.JSX.Element {
                     value={block.taskNotes}
                     placeholder="—"
                     testid={`notes-${block.id}`}
+                    multiline
                     onCommit={(v) => window.api.updateTask(block.taskId, { notes: v || null }).then(load)}
                   />
                 </td>
@@ -187,6 +230,7 @@ export function TodaysLog(): React.JSX.Element {
                     value={block.summary}
                     placeholder="—"
                     testid={`summary-${block.id}`}
+                    multiline
                     onCommit={(v) => window.api.updateBlock(block.id, { summary: v || null }).then(load)}
                   />
                 </td>

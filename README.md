@@ -4,7 +4,7 @@
 
 A local Windows tray app for personal time tracking, triggered by an Elgato
 Stream Deck via a custom `timetracker://` protocol. Capture discrete work blocks
-(task name, optional ticket ID, notes), review them in a daily log, and export a
+(task name, optional reference, notes), review them in a daily log, and export a
 CSV to write your time entries from. No backend, no cloud, no network listeners.
 
 ## Features
@@ -15,8 +15,9 @@ CSV to write your time entries from. No backend, no cloud, no network listeners.
   pickers, end-of-task summary, and crash recovery.
 - **Tray** — state-coloured stopwatch icon (idle / active / paused / error) with
   a live elapsed tooltip; Pause/Resume/Quick View/Settings from the menu.
-- **Today's Log** — editable daily log with inline edits, back-date, merge,
-  split, delete, daily totals, and a CSV day export.
+- **Today's Log** — editable daily log with inline edits (including start/end
+  times), back-date, merge, split, delete, daily totals, a CSV day export, and
+  quick access to Settings.
 - **Crash-safe** — a heartbeat lets the app reconcile a session left running
   (Resume / End at last-alive / Discard); durations are never invented.
 - **Settings** — launch-at-startup, notifications, trigger toggles, hotkey

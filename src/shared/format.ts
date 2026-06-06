@@ -38,7 +38,7 @@ const csvField = (value: string): string => (/[",\n\r]/.test(value) ? `"${value.
  * Excel friendliness.
  */
 export const formatDayCsv = (blocks: BlockWithTask[], opts: { now: number }): string => {
-  const header = ['Date', 'Start', 'End', 'Hours', 'Task', 'Ticket', 'Summary']
+  const header = ['Date', 'Start', 'End', 'Hours', 'Task', 'Reference', 'Summary']
   const rows = blocks.map((b) => {
     const hours = ((b.endTime ?? opts.now) - b.startTime) / 3_600_000
     return [

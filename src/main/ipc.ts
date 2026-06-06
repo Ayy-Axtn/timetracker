@@ -16,6 +16,7 @@ import { createTask, getRecentTasks, updateTask } from './db/tasks'
 import {
   createEndedBlock,
   deleteBlock,
+  getBlockById,
   getBlocksForRange,
   mergeBlocks,
   splitBlock,
@@ -26,6 +27,7 @@ import { localDayBounds } from './time'
 import { updateHotkeys } from './triggers/hotkeys'
 import { applySettings } from './settings-actions'
 import { resyncState } from './state/runner'
+import { showSettingsWindow } from './windows'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -42,6 +44,9 @@ export const registerIpcHandlers = (): void => {
   ipcMain.handle('settings:update', (_event, patch: Partial<Settings>): Settings =>
     applySettings(patch)
   )
+
+  // Open the settings window from the Today's Log (mirrors the tray's Settings…).
+  ipcMain.handle('windows:open-settings', (): void => showSettingsWindow())
 
   ipcMain.handle('tasks:create', (_event, input: NewTaskInput): Task => {
     const name = typeof input?.name === 'string' ? input.name.trim() : ''
@@ -85,6 +90,16 @@ export const registerIpcHandlers = (): void => {
   })
 
   ipcMain.handle('blocks:update', (_event, id: number, patch: BlockPatch): Block | undefined => {
+    // Guard the "ends after it starts" invariant for time edits, against the
+    // block's current values (the renderer validates too, this is defence-in-depth).
+    if (patch.startTime !== undefined || patch.endTime !== undefined) {
+      const current = getBlockById(id)
+      if (current) {
+        const start = patch.startTime ?? current.startTime
+        const end = patch.endTime !== undefined ? patch.endTime : current.endTime
+        if (end !== null && end <= start) throw new Error('A block must end after it starts')
+      }
+    }
     const result = updateBlock(id, patch)
     resyncState()
     return result

@@ -171,4 +171,34 @@ const execute = async (): Promise<void> => {
         }
       }))
   )
+
+  // Inline-edit Alpha's start time (09:00 → 08:30) via the clickable clock cell.
+  await clickTestid(`start-${aBlock.id}`)
+  if (!(await waitFor(sel(`start-${aBlock.id}-input`)))) throw new Error('start editor never rendered')
+  await setValue(`start-${aBlock.id}-input`, '08:30')
+  await keydown(`start-${aBlock.id}-input`, 'Enter')
+  check('inline start-time edit persists to the DB', await waitUntil(() => getBlockById(aBlock.id)?.startTime === atToday(8, 30)))
+
+  // An end before the start is rejected: the value is unchanged and an error shows.
+  await clickTestid(`end-${aBlock.id}`)
+  if (!(await waitFor(sel(`end-${aBlock.id}-input`)))) throw new Error('end editor never rendered')
+  await setValue(`end-${aBlock.id}-input`, '07:00')
+  await keydown(`end-${aBlock.id}-input`, 'Enter')
+  check('invalid end (before start) is rejected', await waitFor(sel('edit-error')))
+  check('rejected edit leaves the end unchanged', getBlockById(aBlock.id)?.endTime === atToday(10, 0))
+
+  // Multi-line notes: line breaks survive in the log (display + textarea edit).
+  const noted = createTask({ name: 'Noted', notes: 'first line\nsecond line' }, atToday(12, 0))
+  const notedBlock = createEndedBlock({ taskId: noted.id, startTime: atToday(12, 0), endTime: atToday(12, 30), summary: null })
+  notifyBlocksChanged()
+  await waitFor(sel(`notes-${notedBlock.id}`))
+  check(
+    'multi-line notes preserve line breaks in display',
+    await exec<boolean>(`getComputedStyle(${sel(`notes-${notedBlock.id}`)}).whiteSpace.startsWith('pre')`)
+  )
+  await clickTestid(`notes-${notedBlock.id}`)
+  check(
+    'editing multi-line notes opens a textarea',
+    await waitFor(`${sel(`notes-${notedBlock.id}-input`)} && ${sel(`notes-${notedBlock.id}-input`)}.tagName === 'TEXTAREA'`)
+  )
 }

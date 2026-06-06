@@ -9,7 +9,7 @@ import type { CrashRecoveryChoice, OpenTaskView, ResolveActiveChoice } from '../
 export type { CrashRecoveryChoice, OpenTaskView, ResolveActiveChoice }
 
 export interface Prompter {
-  /** New Task: gather name (required) + optional ticket/notes. Recent tasks for autocomplete. */
+  /** New Task: gather name (required) + optional reference/notes. Recent tasks for autocomplete. */
   newTaskDetails(recent: Task[]): Promise<NewTaskInput | null>
   /** When New Task is invoked with a task already active: pause it or end it? */
   resolveActiveOnNew(activeTaskName: string): Promise<ResolveActiveChoice | null>

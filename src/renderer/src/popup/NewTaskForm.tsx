@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react'
 import type { NewTaskInput, Task } from '../../../shared/models'
 import type { NewTaskPayload } from '../../../shared/popup'
+import { AutoTextarea } from './AutoTextarea'
 
 // Subsequence fuzzy match: every character of the query appears, in order.
 const fuzzy = (query: string, text: string): boolean => {
@@ -93,20 +94,28 @@ export function NewTaskForm({
       <input
         className="field"
         data-testid="newtask-ticket"
-        placeholder="Ticket ID (optional)"
+        placeholder="Reference (optional)"
         value={ticketId}
         onChange={(e) => setTicketId(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && submitTyped()}
       />
-      <textarea
+      <AutoTextarea
         className="field"
         data-testid="newtask-notes"
         placeholder="Notes (optional)"
         rows={2}
         value={notes}
-        onChange={(e) => setNotes(e.target.value)}
+        onChange={setNotes}
+        onKeyDown={(e) => {
+          // Enter starts the task (as the hint promises); Shift+Enter adds a
+          // newline. Without this, Enter in the notes field did nothing.
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault()
+            submitTyped()
+          }
+        }}
       />
-      <div className="hint">Enter to start · ↑↓ recent tasks · Esc to cancel</div>
+      <div className="hint">Enter to start · ↑↓ recent · Shift+Enter for a new line · Esc to cancel</div>
     </div>
   )
 }
